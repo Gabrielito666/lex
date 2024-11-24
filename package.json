@@ -1,5 +1,5 @@
 {
-  "name": "lex",
+  "name": "lex-js",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -8,5 +8,8 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "This is the first version of LEX. An extremely lightweight alternative to React. It supports very similar syntax and together with lex-builder compiles to vanilla javascript. See Proof.html to find out more. Official documentation is in process as well as the web and compiler.",
+  "publishConfig": {
+    "access": "public"
+  }
 }

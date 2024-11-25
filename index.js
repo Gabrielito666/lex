@@ -28,27 +28,27 @@ class State
     }
 }
 
-const useState = (initValue) => 
+export const useState = (initValue) => 
 {
     const state = new State(initValue);
     return [state, newValue => { state.set(newValue) }];
 }
-const useRef = initValue => ({ current: initValue });
+export const useRef = initValue => ({ current: initValue });
 
 const lexElements = Array.from(document.querySelectorAll("[lexid]"));
 
-let counter = 0;
+const counter = {current : 0};
 
-const createElement = (tag, props={}, ...children) =>
+export const createElement = (tag, props={}, ...children) =>
 {
+
     if(!props) props = {};
-    props.lexid = counter;
+    props.lexid = counter.current;
     let element;
     let selectMode = false;
-    if(lexElements.length > 0)
+    if(lexElements.length > counter.current)
     {
         element = document.querySelector(`[lexid="${props.lexid}"]`);
-        lexElements.shift();
         selectMode = true;
     }
     
@@ -103,10 +103,12 @@ const createElement = (tag, props={}, ...children) =>
     else if(typeof tag === 'function')
     {
         if(!selectMode) element = tag({ ...props, children });
+        else tag({ ...props, children });
     }
 
-    counter++;
-    return element
+    if(typeof tag === "string") counter.current++;
+
+    return element;
 }
 
 const Lex = { createElement, State, useState, useRef };

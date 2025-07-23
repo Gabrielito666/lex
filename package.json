@@ -1,9 +1,9 @@
 {
   "name": "@lek-js/lex",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node test/build.test.js"
   },
   "keywords": [],
   "author": "",
@@ -11,5 +11,9 @@
   "description": "This is the first version of LEX. An extremely lightweight alternative to React. It supports very similar syntax and together with lex-builder compiles to vanilla javascript. See Proof.html to find out more. Official documentation is in process as well as the web and compiler.",
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.8"
+  },
+  "types": "./types.d.ts"
 }

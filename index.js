@@ -1,4 +1,15 @@
-class State
+/**
+ * @typedef {import("./types.d.ts").State} State
+ * @typedef {import("./types.d.ts").StateClass} StateClass
+ * @typedef {import("./types.d.ts").UseState} UseState
+ * @typedef {import("./types.d.ts").UseRef} UseRef
+ * @typedef {import("./types.d.ts").FragmentComponent} FragmentComponent
+ * @typedef {import("./types.d.ts").CreateElement} CreateElement
+ * @typedef {import("./types.d.ts").Lex} Lex
+*/
+
+/**@type {StateClass}*/
+export class State
 {
     constructor(initValue)
     {
@@ -28,20 +39,37 @@ class State
     }
 }
 
+/**@type {UseState}*/
 export const useState = (initValue) => 
 {
     const state = new State(initValue);
     return [state, newValue => { state.set(newValue) }];
 }
+
+/**@type {UseRef}*/
 export const useRef = initValue => ({ current: initValue });
+
+const flattenChildren = (children) =>
+{
+    const result = [];
+    children.forEach(ch =>
+    {
+        if(Array.isArray(ch))
+        {
+            result.push(...flattenChildren(ch));
+        }
+        else result.push(ch);
+    })
+    return result;
+}
 
 const lexElements = Array.from(document.querySelectorAll("[lexid]"));
 
 const counter = {current : 0};
 
+/**@type {CreateElement}*/
 export const createElement = (tag, props={}, ...children) =>
 {
-
     if(!props) props = {};
     props.lexid = counter.current;
     let element;
@@ -73,8 +101,7 @@ export const createElement = (tag, props={}, ...children) =>
             }
             else element.setAttribute(key, value);
         }
-        children.reduce((acc, ch) => [...acc, ...Array.isArray(ch) ? ch : [ch]],[])
-        .forEach((ch, i) =>
+        flattenChildren(children).forEach((ch, i) =>
         {
             if(selectMode)
             {
@@ -111,6 +138,10 @@ export const createElement = (tag, props={}, ...children) =>
     return element;
 }
 
-const Lex = { createElement, State, useState, useRef };
+/**@type {FragmentComponent}*/
+export const Fragment = ({ children }) => children;
+
+/**@type {Lex}*/
+const Lex = { createElement, State, useState, useRef, Fragment };
 
 export default Lex;

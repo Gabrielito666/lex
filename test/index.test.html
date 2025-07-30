@@ -83,18 +83,20 @@ var createElement = (tag, props = {}, ...children) => {
   }
   if (typeof tag === "string") {
     if (!selectMode) element = document.createElement(tag);
-    if (props.ref && props.ref instanceof Object) {
-      props.ref.current = element;
-    }
-    for (let [key, value] of Object.entries(props)) {
-      if (key.startsWith("on") && typeof value === "function") element.addEventListener(key.slice(2).toLowerCase(), value);
-      else if (value instanceof State) {
+    Object.entries(props).forEach(([key, value]) => {
+      if (key.startsWith("on") && typeof value === "function") {
+        element.addEventListener(key.slice(2).toLowerCase(), value);
+      } else if (value instanceof State) {
         value.appendOnChange((newValue) => {
           props[key] = newValue;
           element.setAttribute(key, newValue);
         });
-      } else element.setAttribute(key, value);
-    }
+      } else if (key === "ref" && value instanceof Object) {
+        props.ref.current = element;
+      } else {
+        element.setAttribute(key, value);
+      }
+    });
     flattenChildren(children).forEach((ch, i) => {
       if (selectMode) {
         if (ch instanceof State) {
@@ -116,11 +118,11 @@ var createElement = (tag, props = {}, ...children) => {
         }
       }
     });
+    counter.current++;
   } else if (typeof tag === "function") {
     if (!selectMode) element = tag(__spreadProps(__spreadValues({}, props), { children }));
     else tag(__spreadProps(__spreadValues({}, props), { children }));
   }
-  if (typeof tag === "string") counter.current++;
   return element;
 };
 var Fragment = ({ children }) => children;
@@ -130,13 +132,15 @@ var index_default = Lex;
 // test/lex.test.js
 var Counter = () => {
   const [count, setCount] = useState(0);
+  const ref = useRef(null);
   const clickHandler = () => {
     setCount(count + 1);
+    console.log(ref.current.textContent);
   };
-  return /* @__PURE__ */ index_default.createElement("div", null, /* @__PURE__ */ index_default.createElement("h1", null, "numero: ", count), /* @__PURE__ */ index_default.createElement("button", { onClick: clickHandler }, "increment"));
+  return /* @__PURE__ */ index_default.createElement("div", null, /* @__PURE__ */ index_default.createElement("h1", { ref }, "numero: ", count), /* @__PURE__ */ index_default.createElement("button", { onClick: clickHandler }, "increment"));
 };
 var Main = ({ children }) => /* @__PURE__ */ index_default.createElement("main", null, children);
-var Counters = () => /* @__PURE__ */ index_default.createElement("div", null, /* @__PURE__ */ index_default.createElement(Counter, null), /* @__PURE__ */ index_default.createElement(Counter, null), /* @__PURE__ */ index_default.createElement(Counter, null), /* @__PURE__ */ index_default.createElement(Counter, null));
+var Counters = () => /* @__PURE__ */ index_default.createElement(index_default.Fragment, null, /* @__PURE__ */ index_default.createElement(Counter, null), /* @__PURE__ */ index_default.createElement(Counter, null), /* @__PURE__ */ index_default.createElement(Counter, null), /* @__PURE__ */ index_default.createElement(Counter, null));
 console.log(/* @__PURE__ */ index_default.createElement(Main, null, /* @__PURE__ */ index_default.createElement(Counters, null)));
 document.querySelector("body").appendChild(/* @__PURE__ */ index_default.createElement(Main, null, /* @__PURE__ */ index_default.createElement(Counters, null)));
 </script>

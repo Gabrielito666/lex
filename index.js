@@ -84,13 +84,12 @@ export const createElement = (tag, props={}, ...children) =>
     {
         if(!selectMode) element = document.createElement(tag);
 
-        if(props.ref && props.ref instanceof Object)
+        Object.entries(props).forEach(([key, value]) =>
         {
-            props.ref.current = element;
-        }
-        for(let [key, value] of Object.entries(props))
-        {
-            if (key.startsWith("on") && typeof value === "function") element.addEventListener(key.slice(2).toLowerCase(), value);
+            if (key.startsWith("on") && typeof value === "function")
+            {
+                element.addEventListener(key.slice(2).toLowerCase(), value);
+            }
             else if(value instanceof State)
             {
                 value.appendOnChange((newValue) =>
@@ -99,8 +98,16 @@ export const createElement = (tag, props={}, ...children) =>
                     element.setAttribute(key, newValue);
                 })
             }
-            else element.setAttribute(key, value);
-        }
+            else if(key === "ref" && value instanceof Object)
+            {
+                props.ref.current = element;
+            }
+            else
+            {
+                element.setAttribute(key, value);
+            }
+        });
+
         flattenChildren(children).forEach((ch, i) =>
         {
             if(selectMode)
@@ -126,14 +133,13 @@ export const createElement = (tag, props={}, ...children) =>
                 }
             }
         })
+        counter.current++;
     }
     else if(typeof tag === 'function')
     {
         if(!selectMode) element = tag({ ...props, children });
         else tag({ ...props, children });
     }
-
-    if(typeof tag === "string") counter.current++;
 
     return element;
 }

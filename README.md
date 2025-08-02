@@ -134,6 +134,79 @@ const MyComponent = () => {
     </div>
 }
 ```
+### useClient & startClient
+
+LEX provides a sophisticated client-side execution system with two key functions that work together to manage server-side rendering and client-side hydration:
+
+#### useClient
+
+A wrapper that registers functions to be executed on the client side. This prevents the LEX builder from executing code that should only run after the component is hydrated in the browser.
+
+```jsx
+const MyComponent = () => {
+    Lex.useClient(() => {
+        fetch("api/data")
+    });
+
+    return <div>
+        <h1>My Component</h1>
+    </div>
+}
+```
+
+#### startClient
+
+A signal function that executes all registered client-side code. This should be called after the root component(s) have been mounted to ensure all DOM elements are available.
+
+```jsx
+// After mounting your root component
+const app = <App />;
+document.body.appendChild(app);
+
+// Execute all client-side code
+Lex.startClient();
+```
+
+#### Complete Example
+
+```jsx
+const MyComponent = () => {
+    const divRef = Lex.useRef(null);
+
+    const content = <div ref={divRef}>
+        <h1>Static Content</h1>
+    </div>
+
+    // This will only execute after startClient() is called
+    Lex.useClient(() => {
+        divRef.current.appendChild(<h1>
+            Dynamic content added on client
+        </h1>)
+    });
+
+    return content;
+}
+
+// Mount component
+const app = <MyComponent />;
+document.body.appendChild(app);
+
+// Execute all client-side code
+Lex.startClient();
+```
+
+#### How It Works
+
+1. **Hydration Phase**: During initial render, LEX uses `document.querySelector` to find existing elements with `lexid` attributes
+2. **Client Phase**: After `startClient()` is called, LEX switches to using `document.createElement` for new elements
+3. **Execution Control**: All `useClient` callbacks are queued and executed only when `startClient()` is called
+
+#### Important Notes
+
+- **Call order matters**: Always call `startClient()` after mounting your root component
+- **Async operations**: Perfect for API calls, event listeners, and dynamic content
+- **SSR compatibility**: Enables true server-side rendering with client-side hydration
+- **Performance**: Prevents unnecessary code execution during build time
 
 ### Hydration with lexid
 

@@ -1,2 +1,5 @@
-test/
 node_modules/
+lib/build-html/tests/
+lib/build-jsx/tests/
+lib/builder-lex-lib/tests/
+lib/lex/tests/

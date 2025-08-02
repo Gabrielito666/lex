@@ -17,7 +17,7 @@ export type UseRef = (initValue: any) => { current: any };
 export type FragmentComponent = (props: { children: any }) => any;
 export type CreateElement = (tag: string | Function, props: any, ...children: any[]) => any;
 export type UseClient = (handler: () => void) => void;
-export type StartClient = () => void;
+export type Mount = (mainComponent: any) => void;
 export type Lex = {
     createElement: CreateElement,
     State: StateClass,
@@ -25,5 +25,6 @@ export type Lex = {
     useRef: UseRef,
     Fragment: FragmentComponent,
     useClient: UseClient,
-    startClient: StartClient
+    startClient: StartClient,
+    mount: Mount
 };

@@ -8,8 +8,8 @@ interface LexJstBuildOptions
 
 export interface LexBuildJSX
 {
-    (pageJSX:string, options?:LexJstBuildOptions):Promise<string>;
-    standart(pageJSX:string, options?:LexJstBuildOptions):Promise<string>;
-    layout(layoutJSX:string, pageJSX:string, options?:LexJstBuildOptions):Promise<string>;
-    byStringCode(stringCode:string, resolveDir:string, options?:LexJstBuildOptions):Promise<string>;
+    (pageJSX:string, options?:LexJstBuildOptions):Promise<string | undefined>;
+    standart(pageJSX:string, options?:LexJstBuildOptions):Promise<string | undefined>;
+    layout(layoutJSX:string, pageJSX:string, options?:LexJstBuildOptions):Promise<string | undefined>;
+    byStringCode(stringCode:string, resolveDir:string, options?:LexJstBuildOptions):Promise<string | undefined>;
 }

@@ -5,6 +5,10 @@
   "scripts": {
     "test": "vitest run"
   },
+  "imports": {
+    "#lib/*": "./lib/*/index.js",
+    "#build-lib": "./build-lib/*/index.js"
+  },
   "keywords": [],
   "author": "Gabriel Antonio Farías Ravanal",
   "license": "ISC",
@@ -12,14 +16,8 @@
   "publishConfig": {
     "access": "public"
   },
-  "types": [
-    "./lib/lex/types.d.ts",
-    "./lib/build-html/types.d.ts",
-    "./lib/build-jsx/types.d.ts"
-  ],
   "devDependencies": {
-    "@lek-js/lex": "file:.",
-    "vitest": "^3.2.4"
+    "@lek-js/lex": "file:."
   },
   "dependencies": {
     "esbuild": "^0.25.8",

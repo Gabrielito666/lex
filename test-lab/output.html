@@ -1,0 +1,269 @@
+<html lexid="22"><head lexid="20"><script type="module">(() => {
+  var __defProp = Object.defineProperty;
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
+
+  // node_modules/.pnpm/@lek-js+lex@file+/node_modules/@lek-js/lex/lib/lex/index.js
+  var lex_exports = {};
+  __export(lex_exports, {
+    Fragment: () => Fragment,
+    State: () => State,
+    createElement: () => createElement,
+    default: () => lex_default,
+    mount: () => mount,
+    startClient: () => startClient,
+    useClient: () => useClient,
+    useRef: () => useRef,
+    useState: () => useState
+  });
+
+  // node_modules/.pnpm/@lek-js+lex@file+/node_modules/@lek-js/lex/lib/lex-variables/index.js
+  var lexVariables = {
+    counter: 0,
+    /**@type {Array<() =>any>}*/
+    clientStack: [],
+    selectMode: true
+  };
+
+  // node_modules/.pnpm/@lek-js+lex@file+/node_modules/@lek-js/lex/lib/state/index.js
+  var State = class {
+    /**
+     * @param {T} initValue
+     */
+    constructor(initValue) {
+      this._value = initValue;
+      this.onChangesStack = [];
+    }
+    /**
+     * @returns {T|any}
+     */
+    get() {
+      return this._value;
+    }
+    /**
+     * @param {any} newValue
+     */
+    set(newValue) {
+      this._value = newValue;
+      this.onChangesStack.forEach((fn) => fn(newValue));
+    }
+    /**
+     * @returns {unknown}
+     */
+    valueOf() {
+      return this._value;
+    }
+    /**
+     * @returns {string}
+     */
+    toString() {
+      return String(this._value);
+    }
+    /**
+     * @param {(value: any) => void} fn
+     */
+    appendOnChange(fn) {
+      if (typeof fn === "function") this.onChangesStack.push(fn);
+    }
+  };
+  var useState = (initValue) => {
+    const state = new State(initValue);
+    return [state, (newValue) => {
+      state.set(newValue);
+    }];
+  };
+
+  // node_modules/.pnpm/@lek-js+lex@file+/node_modules/@lek-js/lex/lib/flatten-childs/index.js
+  var flattenChildren = (children) => children.reduce(
+    /**
+     * @param {Array<Element|State<any>|string|null>} acc
+     * @param {ElementRecursiveArray[number]} ch
+     * @returns {Array<Element|State<any>|string|null>}
+     */
+    (acc, ch) => {
+      Array.isArray(ch) ? acc.push(...flattenChildren(ch)) : acc.push(ch);
+      return acc;
+    },
+    []
+  );
+
+  // node_modules/.pnpm/@lek-js+lex@file+/node_modules/@lek-js/lex/lib/create-element/index.js
+  var analyseProp = (key, value) => {
+    if (key.startsWith("on") && typeof value === "function") {
+      return { key: key.toLowerCase().replace(/^on/, ""), type: "event", value };
+    }
+    if (key === "className") {
+      return { key: "class", type: "attribute", value };
+    }
+    if (key === "ref" && value instanceof Object) {
+      return { key, type: "ref", value };
+    }
+    if (key === "htmlFor") {
+      return { key: "for", type: "attribute", value };
+    }
+    return { key: key.toLowerCase(), type: "attribute", value };
+  };
+  var asignProp = (prop, element) => {
+    if (prop.type === "attribute") {
+      element.setAttribute(prop.key, prop.value);
+      return;
+    }
+    if (prop.type === "event") {
+      element.addEventListener(prop.key, prop.value);
+      return;
+    }
+    if (prop.type === "ref") {
+      prop.value.current = element;
+      return;
+    }
+  };
+  var createElementFromString = (tag, props, ...children) => {
+    const _props = props || /**@type{Record<string, any>}*/
+    {};
+    const element = lexVariables.selectMode ? document.querySelector(`[lexid="${lexVariables.counter}"]`) : document.createElement(tag);
+    if (!lexVariables.selectMode && ["head", "html"].includes(tag)) {
+      element?.setAttribute("lexid", String(lexVariables.counter));
+    }
+    if (!lexVariables.selectMode) {
+      if (_props.ref || flattenChildren(children).some((ch) => ch instanceof State) || Object.values(_props).some((val) => val instanceof State || typeof val === "function") || _props.selectSelf) element?.setAttribute("lexid", String(lexVariables.counter));
+    }
+    lexVariables.counter++;
+    Object.entries(_props).forEach(([key, value]) => {
+      const prop = analyseProp(key, value);
+      asignProp(prop, element);
+      if (value instanceof State) {
+        value.appendOnChange((newValue) => {
+          prop.value = newValue;
+          asignProp(prop, element);
+        });
+      }
+    });
+    flattenChildren(children).forEach((ch, i) => {
+      if (ch === null) return;
+      if (ch instanceof window.Node && !lexVariables.selectMode) {
+        element.appendChild(ch);
+        return;
+      }
+      if (typeof ch === "string" && !lexVariables.selectMode) {
+        const textNode = document.createTextNode(String(ch));
+        element.appendChild(textNode);
+        return;
+      }
+      if (ch instanceof State) {
+        let textNode = element.childNodes[i];
+        if (!textNode) {
+          textNode = document.createTextNode(ch.get());
+          element.appendChild(textNode);
+        }
+        if (!lexVariables.selectMode) {
+          textNode.nodeValue = ch.get();
+        }
+        ch.appendOnChange((newValue) => {
+          textNode.nodeValue = newValue;
+        });
+        return;
+      }
+      return;
+    });
+    return (
+      /**@type {R}*/
+      element
+    );
+  };
+  var createElementFromFunction = (tag, props, ...children) => {
+    const _props = props || {};
+    const element = tag(
+      /**@type {P&{children:C}}*/
+      { ..._props, children: flattenChildren(children) }
+    );
+    if (element instanceof Promise) {
+      throw new Error("Lex.createElement doesn't support async components");
+    }
+    return element;
+  };
+  var createElement = (tag, props, ...children) => {
+    if (typeof tag === "string") {
+      return createElementFromString(
+        tag,
+        /**@type{StringComponentProps|null}*/
+        props,
+        ...children
+      );
+    }
+    return createElementFromFunction(
+      tag,
+      /**@type{P}*/
+      props,
+      ...children
+    );
+  };
+
+  // node_modules/.pnpm/@lek-js+lex@file+/node_modules/@lek-js/lex/lib/fragment/index.js
+  var Fragment = ({ children }) => children;
+
+  // node_modules/.pnpm/@lek-js+lex@file+/node_modules/@lek-js/lex/lib/mount/index.js
+  var startClient = () => {
+    if (lexVariables.selectMode) {
+      lexVariables.selectMode = false;
+      lexVariables.clientStack.forEach((handler) => handler());
+      lexVariables.clientStack.length = 0;
+    }
+  };
+  var mount = (mainComponent) => {
+    startClient();
+  };
+
+  // node_modules/.pnpm/@lek-js+lex@file+/node_modules/@lek-js/lex/lib/ref/index.js
+  var useRef = (initValue) => ({ current: initValue });
+
+  // node_modules/.pnpm/@lek-js+lex@file+/node_modules/@lek-js/lex/lib/use-client/index.js
+  var useClient = (handler) => {
+    if (typeof handler !== "function") throw new Error("useClient only accepts functions");
+    lexVariables.clientStack.push(handler);
+  };
+
+  // node_modules/.pnpm/@lek-js+lex@file+/node_modules/@lek-js/lex/lib/lex/index.js
+  var Lex = {
+    createElement,
+    Fragment,
+    mount,
+    useRef,
+    State,
+    useState,
+    useClient,
+    startClient
+  };
+  var lex_default = Lex;
+
+  // node_modules/.pnpm/@lek-js+lex@file+/node_modules/@lek-js/lex/index.js
+  var lex_default2 = lex_exports;
+
+  // test-lab/index.jsx
+  var Layout = ({ children }) => /* @__PURE__ */ lex_default2.createElement("html", null, /* @__PURE__ */ lex_default2.createElement("head", null), /* @__PURE__ */ lex_default2.createElement("body", null, children));
+  var Counter = () => {
+    const [count, setCount] = useState(0);
+    return /* @__PURE__ */ lex_default2.createElement("article", null, /* @__PURE__ */ lex_default2.createElement("h3", null, "Contador"), /* @__PURE__ */ lex_default2.createElement("p", null, "Su numero es: ", /* @__PURE__ */ lex_default2.createElement("span", null, count)), /* @__PURE__ */ lex_default2.createElement("button", { onClick: () => {
+      setCount(count + 1);
+    } }, "Incrementar"));
+  };
+  var ButtonAndInput = () => {
+    const inputRef = useRef();
+    const onClick = () => {
+      console.log("el input dice:", inputRef.current.value);
+    };
+    return /* @__PURE__ */ lex_default2.createElement("section", null, /* @__PURE__ */ lex_default2.createElement("label", null, "Nombre: ", /* @__PURE__ */ lex_default2.createElement("input", { type: "text", ref: inputRef })), /* @__PURE__ */ lex_default2.createElement("button", { onClick }, "Enviar"));
+  };
+  var ComponentWithDifferentCalls = () => {
+    const miInput = /* @__PURE__ */ lex_default2.createElement("input", { type: "text", selectSelf: true });
+    return /* @__PURE__ */ lex_default2.createElement("aside", null, /* @__PURE__ */ lex_default2.createElement("h4", null, "Prueba con llamadas en diferentes partes"), miInput, /* @__PURE__ */ lex_default2.createElement("button", { onClick: () => {
+      console.log(miInput.value);
+    } }, "Enviar"));
+  };
+  var Page = () => {
+    return /* @__PURE__ */ lex_default2.createElement("main", null, /* @__PURE__ */ lex_default2.createElement("h1", null, "Primera prueba de refactor"), /* @__PURE__ */ lex_default2.createElement(Counter, null), /* @__PURE__ */ lex_default2.createElement(Counter, null), /* @__PURE__ */ lex_default2.createElement(ButtonAndInput, null), /* @__PURE__ */ lex_default2.createElement(ComponentWithDifferentCalls, null));
+  };
+  lex_default2.mount(/* @__PURE__ */ lex_default2.createElement(Layout, null, /* @__PURE__ */ lex_default2.createElement(Page, null)));
+})();
+</script></head><body><main><h1>Primera prueba de refactor</h1><article><h3>Contador</h3><p>Su numero es: <span lexid="2">0</span></p><button lexid="4">Incrementar</button></article><article><h3>Contador</h3><p>Su numero es: <span lexid="7">0</span></p><button lexid="9">Incrementar</button></article><section><label>Nombre: <input lexid="11" type="text"></label><button lexid="13">Enviar</button></section><aside><h4>Prueba con llamadas en diferentes partes</h4><input lexid="15" type="text" selectself="true"><button lexid="17">Enviar</button></aside></main></body></html>

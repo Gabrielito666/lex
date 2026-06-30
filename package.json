@@ -3,11 +3,12 @@
   "version": "2.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "vitest run"
+    "test": "node --test",
+    "build-lab": "node test-lab/build.js --html"
   },
   "imports": {
     "#lib/*": "./lib/*/index.js",
-    "#build-lib": "./build-lib/*/index.js"
+    "#build-lib/*": "./build-lib/*/index.js"
   },
   "keywords": [],
   "author": "Gabriel Antonio Farías Ravanal",

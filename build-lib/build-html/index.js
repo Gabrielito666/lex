@@ -85,7 +85,7 @@ buildHTML.byStringCode = async(stringCode, resolveDir, options) =>
 	const optionsToBuild = {...options, write: false}; // write: false is important method return a string
 	const codeToClient = await buildJSX.byStringCode(stringCode, resolveDir, optionsToBuild);
 
-	if(!codeToClient) throw new Error();
+	if(!codeToClient) throw new Error("Error in buildHTML. buildJsx did not return a string as expected... Please report the error.");
 
 	const codeToBuild = await buildCodeToBuild(stringCode, resolveDir);
 

@@ -20,12 +20,12 @@ import Lex from "@lek-js/lex";
 
 El ciclo de vida de la app incluye un build-time y un run-time
 
-Durante el build time createElement va a siempre usar `document.createElement()` por detras. En este modo la app está configurada para asignar atributos lexid a los elementos que neseciten hidratarse en runtime (botones con eventos, inputs con referencias, etiquetas con diferentes estados. etc). Mas adelante hay documentación sobre el uso de el compilador.
+Durante el build time createElement va a siempre usar `document.createElement()` por detrás. En este modo la app está configurada para asignar atributos lexid a los elementos que necesiten hidratarse en runtime (botones con eventos, inputs con referencias, etiquetas con diferentes estados. etc). Mas adelante hay documentación sobre el uso de el compilador.
 
 En runtime hay 2 sub-momentos: select-mode y create-mode.
-Al comienzo la app se debe montar con Lex.mount(<MainComponent>). Mientras la app se monta va a hidratar aquellos elementos que tengan lexid añadiendo los listeners de eventos o referencias nesesarias. En este caso se usa document.querySelector por detrás.
+Al comienzo la app se debe montar con Lex.mount(<MainComponent>). Mientras la app se monta va a hidratar aquellos elementos que tengan lexid añadiendo los listeners de eventos o referencias necesarias. En este caso se usa document.querySelector por detrás.
 
-Ojo, en este modo pasa que solo se van a retornar los elementos que nesecitan hidratación ya que son los únicos que cuentan con un lexid, el resto se consideran elementos estáticos que simplemente ya están escitos por el bundler en el html. Por lo tanto si quieres acceder a un elemento en una const durante el proceso de montar la app puedes usar el atributo \__keep:
+Ojo, en este modo pasa que solo se van a retornar los elementos que necesitan hidratación ya que son los únicos que cuentan con un lexid, el resto se consideran elementos estáticos que simplemente ya están escritos por el bundler en el html. Por lo tanto si quieres acceder a un elemento en una const durante el proceso de montar la app puedes usar el atributo \__keep:
 
 ```jsx
 const myElement = <h1 __keep>Mi H1</h1>;
@@ -33,9 +33,9 @@ console.log(myElement); //no será null
 console.log(<h1>Otro H1</h1>); //será null
 ```
 
-En eventListeners o dentro de useClient \__keep no es nesesario, pero para la fase de mount puede ser super util.
+En eventListeners o dentro de useClient \__keep no es necesario, pero para la fase de mount puede ser super útil.
 
-En create-mode se utilizará por detras document.createElement() y esto implica que siempre se retornará el elemento creado. Este mode será el que utilizarás dentro de eventListeners, o dentro del hook useClient.
+En create-mode se utilizará por detrás document.createElement() y esto implica que siempre se retornará el elemento creado. Este mode será el que utilizarás dentro de eventListeners, o dentro del hook useClient.
 
 ### createElement
 
@@ -213,14 +213,14 @@ Lex.mount(<MyComponent />);
 
 #### Cómo Funciona
 
-0. **Fase de Build**: Cuando se construye con `buildHTML`, se ejecuta el código en un sandbox basado en el valor recibido en `mount()`. Los elemntos que neseciten hidratación se marcan con un `lexid` para ser seleccionado en la siguiente fase.
+0. **Fase de Build**: Cuando se construye con `buildHTML`, se ejecuta el código en un sandbox basado en el valor recibido en `mount()`. Los elementos que necesiten hidratación se marcan con un `lexid` para ser seleccionado en la siguiente fase.
 1. **Fase de Hidratación**: Ya en el cliente, durante el renderizado inicial, LEX usa `document.querySelector` para encontrar elementos existentes con atributos `lexid`
 2. **Fase Cliente**: Después de que `mount()` es llamado, LEX cambia a usar `document.createElement` para nuevos elementos
 3. **Control de Ejecución**: Todos los callbacks de `useClient` son encolados y ejecutados solo cuando `mount()` es llamado
 
 ### Hidratación con lexid
 
-LEX incluye un sistema de hidratación incorporado usando el atributo `lexid`. Esta prop se agrega automáticamente a todos los elementos generados por LEX que lo neseciten para habilitar la creación selectiva de elementos y la hidratación.
+LEX incluye un sistema de hidratación incorporado usando el atributo `lexid`. Esta prop se agrega automáticamente a todos los elementos generados por LEX que lo necesiten para habilitar la creación selectiva de elementos y la hidratación.
 
 Cuando LEX crea elementos, asigna un `lexid` único a cada uno. Si un elemento con el mismo `lexid` ya existe en el DOM (creado por el constructor y presente en el HTML), LEX seleccionará y reutilizará ese elemento existente en lugar de crear uno nuevo.
 
@@ -244,7 +244,7 @@ const MyComponent = () => {
 
 #### Nota Importante
 
-El sistema `lexid` funciona automáticamente - no necesitas gestionar manualmente estos IDs. LEX-BUILDER y LEX maneja la asignación y la lógica de selección internamente para asegurar una hidratación apropiada.
+El sistema `lexid` funciona automáticamente - no necesitas gestionar manualmente estos IDs. LEX-BUILDER y LEX manejan la asignación y la lógica de selección internamente para asegurar una hidratación apropiada.
 
 ## Builder
 
@@ -304,14 +304,14 @@ Por defecto el builder compilará basado en
 Lex.mount(<Layout><Page /></Layout>);
 ```
 
-Estos metodos agradablemente manejan los imports de css e incrustan los estilos en el html.
+Estos métodos agradablemente manejan los imports de css e incrustan los estilos en el html.
 
 #### Opciones de Configuración
 
-- **`minify`**: Minimifica o no el JavaScript dentro del HTML
+- **`minify`**: Minifica o no el JavaScript dentro del HTML
 
 #### return-type
-Estos metodos retornan un objeto con la siguiente firma:
+Estos métodos retornan un objeto con la siguiente firma:
 ```ts
 {
 	htmlText: string;

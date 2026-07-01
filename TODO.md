@@ -1,3 +1,3 @@
+Next steps
 - Pasar de lab a tests
-- actualizar documentación de esta versión
-- publicar
+- Mejorar builder options

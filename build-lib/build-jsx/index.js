@@ -3,13 +3,17 @@ const path = require("path");
 const buildHTMLTemplates = require("#build-lib/builder-templates");
 
 /**
- * @import {BuildOptions} "esbuild";
+ * @import {OutputFile} from "esbuild";
+ *
+ * @typedef {{
+ *	minify?: boolean,
+ * }} Options
  */
 
 /**
  * @param {string} pageJsx
- * @param {BuildOptions} options
- * @returns {Promise<string|undefined>}
+ * @param {Options} options
+ * @returns {Promise<OutputFile[]>}
  */
 const buildJSX = (pageJsx, options={}) =>
 {
@@ -17,8 +21,8 @@ const buildJSX = (pageJsx, options={}) =>
 }
 /**
  * @param {string} pageJsx
- * @param {BuildOptions} options
- * @returns {Promise<string|undefined>}
+ * @param {Options} options
+ * @returns {Promise<OutputFile[]>}
  */
 buildJSX.standart = async(pageJsx, options={}) =>
 {
@@ -28,8 +32,8 @@ buildJSX.standart = async(pageJsx, options={}) =>
 /**
  * @param {string} layoutJsx
  * @param {string} pageJsx
- * @param {BuildOptions} options
- * @returns {Promise<string|undefined>}
+ * @param {Options} options
+ * @returns {Promise<OutputFile[]>}
  */
 buildJSX.layout = async(layoutJsx, pageJsx, options={}) =>
 {
@@ -40,8 +44,8 @@ buildJSX.layout = async(layoutJsx, pageJsx, options={}) =>
 /**
  * @param {string} stringCode
  * @param {string} resolveDir
- * @param {BuildOptions} options
- * @returns {Promise<string|undefined>}
+ * @param {Options} options
+ * @returns {Promise<OutputFile[]>}
  */
 buildJSX.byStringCode = async(stringCode, resolveDir, options={}) =>
 {
@@ -54,21 +58,21 @@ buildJSX.byStringCode = async(stringCode, resolveDir, options={}) =>
 			loader: "jsx"
 		},
 		bundle: true,
-		minify: true,
+		minify: options.minify,
 		platform: "browser",
 		jsxFactory: "Lex.createElement",
 		jsxFragment: "Lex.Fragment",
 		write: false,
-		...options
+		outfile: "lex-bundle.js",
+		loader: {
+			".css": "css"
+		}
 	});
 
 	if(out.errors.length > 0) throw out.errors[0];
+	if(out.outputFiles.length < 1) throw new Error("An unexpected error has occurred. There are no output files to return.");
 
-	if(options.write) return undefined;
-
-	if(out.outputFiles && out.outputFiles[0]) return out.outputFiles[0].text;
-
-	return undefined;
+	return out.outputFiles;
 }
 
 module.exports = buildJSX;

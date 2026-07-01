@@ -1,4 +1,5 @@
-import Lex, {useState, useRef} from "@lek-js/lex";
+import Lex, {useState, useRef, useClient} from "@lek-js/lex";
+import "./css-1.css";
 
 const Layout = ({ children }) => <html>
 	<head>
@@ -38,7 +39,7 @@ const ButtonAndInput = () =>
 
 const ComponentWithDifferentCalls = () =>
 {
-	const miInput = <input type="text" selectSelf/>;
+	const miInput = <input type="text" __keep/>;
 
 	return <aside>
 		<h4>Prueba con llamadas en diferentes partes</h4>
@@ -48,13 +49,58 @@ const ComponentWithDifferentCalls = () =>
 	
 }
 
-const Page = () => {
+const Loader = () =>
+{
+	const loaderRef = useRef();
+	window.addEventListener("load", () =>
+	{
+		setTimeout(() => { loaderRef.current?.remove() }, 3000);
+	});
+
+	return <section ref={loaderRef}>
+		<h1>loadding...</h1>
+	</section>;
+}
+
+const useAlert = () => 
+{
+	const alert = <h1 __keep hidden>Alerta!!</h1>;
+
+	const Component = () => alert;
+
+	const start = () =>
+	{
+		alert.hidden = false;
+	}
+	const stop = () =>
+	{
+		alert.hidden = true;
+	}
+	return [Component, start, stop]
+}
+
+const Page = () =>
+{
+
+	useClient(() =>
+	{
+		console.log("Este console.log solo debería verse en el navegador y no en terminal al buildeal");
+	});
+
+	console.log("Este console.log debería verse en el navegador y en la terminal al buildeal");
+
+	const [Alert, startAlert, stopAlert] = useAlert();
+
 	return <main>
 		<h1>Primera prueba de refactor</h1>
 		<Counter/>
 		<Counter/>
 		<ButtonAndInput/>
 		<ComponentWithDifferentCalls/>
+		<Loader/>
+		<button onClick={startAlert}>Activar alerta</button>
+		<button onClick={stopAlert}>Desactivar alerta</button>
+		<Alert/>
 	</main>
 }
 

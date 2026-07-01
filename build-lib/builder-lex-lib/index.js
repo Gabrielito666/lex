@@ -2,15 +2,13 @@ import Lex from "#lib/lex";
 
 import {lexVariables} from "#lib/lex-variables";
 
-lexVariables.selectMode = false;
+lexVariables.mode = "build";
 
 Lex.useClient = (handler) => { /*Ignoramos en build*/ };
-Lex.startClient(); //ejecutamos para que se generen los elementos en build
 Lex.mount = (mainComponent) => {
     //EN JSDOM se añade a body para renderizar html
     document.body.appendChild(mainComponent);
 };
-
 
 export const useClient = Lex.useClient;
 export const Fragment = Lex.Fragment;

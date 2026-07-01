@@ -28,6 +28,7 @@ const buildCodeToBuild = async(stringCode, resolveDir) =>
 		jsxFactory: "Lex.createElement",
 		jsxFragment: "Lex.Fragment",
 		write: false,
+		outfile: "lex-code-to-build",
 		plugins: [{
 			name: 'replace-module',
 			setup(build) {
@@ -36,12 +37,19 @@ const buildCodeToBuild = async(stringCode, resolveDir) =>
 					return { path: require.resolve("#build-lib/builder-lex-lib") };
 				});
 			}
-		}]
+		}],
+		loader: {
+			".css": "css"
+		}
 	});
 
 	if(out.errors.length > 0) throw out.errors[0];
 
-	return out.outputFiles[0].text;
+	const codeFile = out.outputFiles.find(file => path.basename(file.path) === "lex-code-to-build");
+
+	if(!codeFile) throw new Error("An unexpected error has occurred. The main bundle file was not found.");
+
+	return codeFile.text;
 }
 /**
  * @param {string} pageJsx
@@ -83,21 +91,33 @@ buildHTML.layout = async(layoutJsx, pageJsx, options) =>
 buildHTML.byStringCode = async(stringCode, resolveDir, options) =>
 {
 	const optionsToBuild = {...options, write: false}; // write: false is important method return a string
-	const codeToClient = await buildJSX.byStringCode(stringCode, resolveDir, optionsToBuild);
+	const outputFiles = await buildJSX.byStringCode(stringCode, resolveDir, optionsToBuild);
 
-	if(!codeToClient) throw new Error("Error in buildHTML. buildJsx did not return a string as expected... Please report the error.");
+	const bundleJS = outputFiles.find(file => path.basename(file.path) === "lex-bundle.js");
+	if(!bundleJS) throw new Error("An unexpected error has occurred. The main bundle file was not found.");
 
-	const codeToBuild = await buildCodeToBuild(stringCode, resolveDir);
+	const cssFiles = outputFiles.filter(file => file.path.endsWith(".css"));
 
 	const dom = new JSDOM("", { runScripts: "dangerously", resources: "usable" });
+	dom.window.EventTarget.prototype.addEventListener = () => {};
+	dom.window.EventTarget.prototype.dispatchEvent = () => true;
+	dom.window.EventTarget.prototype.removeEventListener = () => {};
 
+	const codeToBuild = await buildCodeToBuild(stringCode, resolveDir);
 	dom.window.eval(codeToBuild);
 
+	const headElement = dom.window.document.querySelector("head[lexid]");
+	cssFiles.forEach(file =>
+	{
+		const styleElement = dom.window.document.createElement("style");
+		styleElement.innerHTML = file.text;
+		headElement?.appendChild(styleElement);
+	});
+
 	const scriptElement = dom.window.document.createElement("script");
-	scriptElement.innerHTML = codeToClient;
+	scriptElement.innerHTML = bundleJS.text;
 	scriptElement.type = "module";
   
-	const headElement = dom.window.document.querySelector("head[lexid]");
 	if(!headElement) throw new Error("Error compiling with buildHTML. We tried to find the head element but couldn't locate it. Please report the error.");
 
 	headElement.appendChild(scriptElement);

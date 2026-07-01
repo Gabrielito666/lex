@@ -1,6 +1,7 @@
 import Lex, {useState, useRef, useClient} from "@lek-js/lex";
 import "./css-1.css";
 import styles from "./css-3.module.css";
+import homero from "./homero.webp";
 
 const Layout = ({ children }) => <html>
 	<head>
@@ -86,6 +87,7 @@ const Page = () =>
 	useClient(() =>
 	{
 		console.log("Este console.log solo debería verse en el navegador y no en terminal al buildeal");
+		console.log(homero);
 	});
 
 	console.log("Este console.log debería verse en el navegador y en la terminal al buildeal");

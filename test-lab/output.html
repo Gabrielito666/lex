@@ -354,6 +354,9 @@ h2 {
     counter: "css_3_counter"
   };
 
+  // test-lab/homero.webp
+  var homero_default = "./lex-assets/homero-Z3BSZQBE.webp";
+
   // test-lab/index.jsx
   var Layout = ({ children }) => /* @__PURE__ */ lex_default2.createElement("html", null, /* @__PURE__ */ lex_default2.createElement("head", null), /* @__PURE__ */ lex_default2.createElement("body", null, children));
   var Counter = () => {
@@ -398,6 +401,7 @@ h2 {
   var Page = () => {
     useClient(() => {
       console.log("Este console.log solo deber\xEDa verse en el navegador y no en terminal al buildeal");
+      console.log(homero_default);
     });
     console.log("Este console.log deber\xEDa verse en el navegador y en la terminal al buildeal");
     const [Alert, startAlert, stopAlert] = useAlert();

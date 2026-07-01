@@ -3,7 +3,6 @@ const esbuild = require("esbuild");
 const buildJSX = require("#build-lib/build-jsx");
 const buildHTMLTemplates = require("#build-lib/builder-templates");
 const path = require("path");
-const fs = require("fs").promises;
 const loaders = require("#build-lib/loaders");
 
 /**
@@ -35,7 +34,8 @@ const buildCodeToBuild = async(stringCode, resolveDir, minify) =>
 		jsxFactory: "Lex.createElement",
 		jsxFragment: "Lex.Fragment",
 		write: false,
-		outfile: "lex-code-to-build",
+		outfile: "lex-code-to-build.js",
+		assetNames: "./lex-assets/[name]-[hash]",
 		plugins: [{
 			name: 'replace-module',
 			setup(build) {
@@ -50,7 +50,7 @@ const buildCodeToBuild = async(stringCode, resolveDir, minify) =>
 
 	if(out.errors.length > 0) throw out.errors[0];
 
-	const codeFile = out.outputFiles.find(file => path.basename(file.path) === "lex-code-to-build");
+	const codeFile = out.outputFiles.find(file => path.basename(file.path) === "lex-code-to-build.js");
 
 	if(!codeFile) throw new Error("An unexpected error has occurred. The main bundle file was not found.");
 

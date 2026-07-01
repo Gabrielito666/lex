@@ -70,7 +70,7 @@ buildJSX.byStringCode = async(stringCode, resolveDir, options={}) =>
 		jsxFragment: "Lex.Fragment",
 		write: false,
 		outfile: "lex-bundle.js",
-		assetNames: "assets/[name]-[hash].[ext]",
+		assetNames: "lex-assets/[name]-[hash]",
 		loader: loaders
 	});
 

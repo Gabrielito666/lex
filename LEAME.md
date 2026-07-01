@@ -16,18 +16,39 @@ import Lex from "@lek-js/lex";
 
 ## Características Principales
 
+### Modos
+
+El ciclo de vida de la app incluye un build-time y un run-time
+
+Durante el build time createElement va a siempre usar `document.createElement()` por detras. En este modo la app está configurada para asignar atributos lexid a los elementos que neseciten hidratarse en runtime (botones con eventos, inputs con referencias, etiquetas con diferentes estados. etc). Mas adelante hay documentación sobre el uso de el compilador.
+
+En runtime hay 2 sub-momentos: select-mode y create-mode.
+Al comienzo la app se debe montar con Lex.mount(<MainComponent>). Mientras la app se monta va a hidratar aquellos elementos que tengan lexid añadiendo los listeners de eventos o referencias nesesarias. En este caso se usa document.querySelector por detrás.
+
+Ojo, en este modo pasa que solo se van a retornar los elementos que nesecitan hidratación ya que son los únicos que cuentan con un lexid, el resto se consideran elementos estáticos que simplemente ya están escitos por el bundler en el html. Por lo tanto si quieres acceder a un elemento en una const durante el proceso de montar la app puedes usar el atributo \__keep:
+
+```jsx
+const myElement = <h1 __keep>Mi H1</h1>;
+console.log(myElement); //no será null
+console.log(<h1>Otro H1</h1>); //será null
+```
+
+En eventListeners o dentro de useClient \__keep no es nesesario, pero para la fase de mount puede ser super util.
+
+En create-mode se utilizará por detras document.createElement() y esto implica que siempre se retornará el elemento creado. Este mode será el que utilizarás dentro de eventListeners, o dentro del hook useClient.
+
 ### createElement
 
 `Lex.createElement` te permite crear elementos HTML. Toma el tag como primer parámetro, props como segundo parámetro, e hijos como parámetros adicionales.
 
 ```js
-const myElement = Lex.createElement("h1", {className: "my-class"});
+const MyElement = () => Lex.createElement("h1", {className: "my-class"});
 ```
 
 O con JSX:
 
 ```jsx
-const myElement = <h1 className="my-class">children</h1>
+const MyElement = () => <h1 className="my-class">children</h1>;
 ```
 
 Como React, puedes anidar hijos con más llamadas a `Lex.createElement` o cadenas de texto. También puedes agregar elementos seleccionados con `document.querySelector` o creados con `document.createElement`.
@@ -35,7 +56,7 @@ Como React, puedes anidar hijos con más llamadas a `Lex.createElement` o cadena
 Esta función retorna un elemento DOM directamente (o un array de elementos), por lo que puedes acceder a todas las propiedades del elemento directamente.
 
 ```jsx
-const myElement = <h1 className="my-class">children</h1>
+const myElement = <h1 className="my-class" __keep>children</h1>
 myElement.appendChild(<span>Otro elemento o texto</span>);
 myElement.remove();
 ```
@@ -164,14 +185,6 @@ const MyComponent = () => {
 Una función señal que recibe el componente principal y luego ejecuta todo el código registrado del lado del cliente. Esto debería llamarse al final de las declaraciones
 
 ```jsx
-
-const app = <App />;
-
-// Ejecutar todo el código del lado del cliente
-Lex.mount(app);
-```
-o bien
-```jsx
 Lex.mount(<App />);
 ```
 
@@ -200,14 +213,14 @@ Lex.mount(<MyComponent />);
 
 #### Cómo Funciona
 
-0. **Fase de Build**: Cuando se construye con `buildHTML`, se ejecuta el código en un sandbox basado en el valor recibido en `mount()`. Cada elemento HTML se marca con un `lexid` para ser seleccionado en la siguiente fase.
+0. **Fase de Build**: Cuando se construye con `buildHTML`, se ejecuta el código en un sandbox basado en el valor recibido en `mount()`. Los elemntos que neseciten hidratación se marcan con un `lexid` para ser seleccionado en la siguiente fase.
 1. **Fase de Hidratación**: Ya en el cliente, durante el renderizado inicial, LEX usa `document.querySelector` para encontrar elementos existentes con atributos `lexid`
 2. **Fase Cliente**: Después de que `mount()` es llamado, LEX cambia a usar `document.createElement` para nuevos elementos
 3. **Control de Ejecución**: Todos los callbacks de `useClient` son encolados y ejecutados solo cuando `mount()` es llamado
 
 ### Hidratación con lexid
 
-LEX incluye un sistema de hidratación incorporado usando el atributo `lexid`. Esta prop se agrega automáticamente a todos los elementos generados por LEX para habilitar la creación selectiva de elementos y la hidratación.
+LEX incluye un sistema de hidratación incorporado usando el atributo `lexid`. Esta prop se agrega automáticamente a todos los elementos generados por LEX que lo neseciten para habilitar la creación selectiva de elementos y la hidratación.
 
 Cuando LEX crea elementos, asigna un `lexid` único a cada uno. Si un elemento con el mismo `lexid` ya existe en el DOM (creado por el constructor y presente en el HTML), LEX seleccionará y reutilizará ese elemento existente en lugar de crear uno nuevo.
 
@@ -244,7 +257,7 @@ Si estás comenzando y quieres compilar a HTML, este es el módulo más sencillo
 ```js
 const buildHTML = require("@lek-js/build-html");
 
-const options = { minify:true, write:true, outfile: "output.html" };
+const options = { minify: true };
 
 buildHTML.byStringCode(stringCode, codeVirtualPath, options);
 buildHTML.standart("entry-point.jsx", options);
@@ -291,17 +304,37 @@ Por defecto el builder compilará basado en
 Lex.mount(<Layout><Page /></Layout>);
 ```
 
+Estos metodos agradablemente manejan los imports de css e incrustan los estilos en el html.
+
 #### Opciones de Configuración
 
 - **`minify`**: Minimifica o no el JavaScript dentro del HTML
-- **`write`**: Si es `true`, escribe en el disco basado en la opción `outfile`. Si es `false`, retorna el código como string
-- **`outfile`**: Para cuando `write` es `true`
+
+#### return-type
+Estos metodos retornan un objeto con la siguiente firma:
+```ts
+{
+	htmlText: string;
+	assets: import("esbuild").OutputFile[];
+}
+```
+
+Luego debes escribir el archivo con fs. y puedes manejar los assets si utilizas imports de imagenes o fonts.
 
 ### build-jsx
 
 También tiene una versión `standart`, `layout` y `byStringCode`, pero retorna el JavaScript para cliente sin HTML.
 
 Esto es para integración con frameworks o control más avanzado. Hay que asegurarse de hidratar bien el HTML.
+
+#### return-type
+```ts
+{
+	bundle: import("esbuild".OutputFile);
+	css?: import("esbuild".OutputFile);
+	assets: import("esbuild".OutputFile)[];
+}
+```
 
 ## ¿Por qué LEX?
 

@@ -4,17 +4,24 @@ const buildJSX = require("#build-lib/build-jsx");
 const buildHTMLTemplates = require("#build-lib/builder-templates");
 const path = require("path");
 const fs = require("fs").promises;
+const loaders = require("#build-lib/loaders");
 
 /**
- * @import {BuildOptions} from "esbuild";
+ * @import {BuildOptions} from "#build-lib/build-jsx";
+ * @import {OutputFile} from "esbuild";
+ * @typedef {{
+ *	htmlText: string;
+ *	assets: OutputFile[];
+ * }} BuildHTMLOutput
  */
 
 /**
  * @param {string} stringCode
  * @param {string} resolveDir
+ * @param {boolean} [minify]
  * @returns {Promise<string>}
  */
-const buildCodeToBuild = async(stringCode, resolveDir) =>
+const buildCodeToBuild = async(stringCode, resolveDir, minify) =>
 {
 	const out = await esbuild.build({
 		stdin: {
@@ -23,7 +30,7 @@ const buildCodeToBuild = async(stringCode, resolveDir) =>
 			loader: "jsx"
 		},
 		bundle: true,
-		minify: true,
+		minify, //importante para no romper los css.modules
 		platform: "browser",
 		jsxFactory: "Lex.createElement",
 		jsxFragment: "Lex.Fragment",
@@ -38,9 +45,7 @@ const buildCodeToBuild = async(stringCode, resolveDir) =>
 				});
 			}
 		}],
-		loader: {
-			".css": "css"
-		}
+		loader: loaders
 	});
 
 	if(out.errors.length > 0) throw out.errors[0];
@@ -54,7 +59,7 @@ const buildCodeToBuild = async(stringCode, resolveDir) =>
 /**
  * @param {string} pageJsx
  * @param {BuildOptions} options
- * @returns {Promise<string|undefined>}
+ * @returns {Promise<BuildHTMLOutput>}
  */
 const buildHTML = async(pageJsx, options) =>
 {
@@ -63,7 +68,7 @@ const buildHTML = async(pageJsx, options) =>
 /**
  * @param {string} pageJsx
  * @param {BuildOptions} options
- * @returns {Promise<string|undefined>}
+ * @returns {Promise<BuildHTMLOutput>}
  */
 buildHTML.standart = async(pageJsx, options) =>
 {
@@ -74,7 +79,7 @@ buildHTML.standart = async(pageJsx, options) =>
  * @param {string} layoutJsx
  * @param {string} pageJsx
  * @param {BuildOptions} options
- * @returns {Promise<string|undefined>}
+ * @returns {Promise<BuildHTMLOutput>}
  */
 buildHTML.layout = async(layoutJsx, pageJsx, options) =>
 {
@@ -86,33 +91,32 @@ buildHTML.layout = async(layoutJsx, pageJsx, options) =>
  * @param {string} stringCode
  * @param {string} resolveDir
  * @param {BuildOptions} options
- * @returns {Promise<string|undefined>}
+ * @returns {Promise<BuildHTMLOutput>}
  */
 buildHTML.byStringCode = async(stringCode, resolveDir, options) =>
 {
 	const optionsToBuild = {...options, write: false}; // write: false is important method return a string
 	const outputFiles = await buildJSX.byStringCode(stringCode, resolveDir, optionsToBuild);
 
-	const bundleJS = outputFiles.find(file => path.basename(file.path) === "lex-bundle.js");
-	if(!bundleJS) throw new Error("An unexpected error has occurred. The main bundle file was not found.");
-
-	const cssFiles = outputFiles.filter(file => file.path.endsWith(".css"));
+	const bundleJS = outputFiles.bundle;
+	const cssFile = outputFiles.css;
 
 	const dom = new JSDOM("", { runScripts: "dangerously", resources: "usable" });
 	dom.window.EventTarget.prototype.addEventListener = () => {};
 	dom.window.EventTarget.prototype.dispatchEvent = () => true;
 	dom.window.EventTarget.prototype.removeEventListener = () => {};
 
-	const codeToBuild = await buildCodeToBuild(stringCode, resolveDir);
+	const codeToBuild = await buildCodeToBuild(stringCode, resolveDir, options.minify);
+
 	dom.window.eval(codeToBuild);
 
-	const headElement = dom.window.document.querySelector("head[lexid]");
-	cssFiles.forEach(file =>
+	const headElement = dom.window.document.querySelector("head[lex_root]");
+	if(cssFile)
 	{
 		const styleElement = dom.window.document.createElement("style");
-		styleElement.innerHTML = file.text;
+		styleElement.innerHTML = cssFile.text;
 		headElement?.appendChild(styleElement);
-	});
+	};
 
 	const scriptElement = dom.window.document.createElement("script");
 	scriptElement.innerHTML = bundleJS.text;
@@ -122,17 +126,15 @@ buildHTML.byStringCode = async(stringCode, resolveDir, options) =>
 
 	headElement.appendChild(scriptElement);
 
-	const htmlElement = dom.window.document.querySelector("html[lexid]");
+	const htmlElement = dom.window.document.querySelector("html[lex_root]");
 	if(!htmlElement) throw new Error("Error compiling with buildHTML. We tried to find the html element but couldn't locate it. Please report the error.");
+
+	htmlElement.removeAttribute("lex_root");
+	headElement.removeAttribute("lex_root");
 
 	const html = htmlElement.outerHTML;
 
-	if(options.write)
-	{
-		if(!options.outfile) throw new Error("Error in buildHTML. If you use `write: true`, you must set an `outfile`.");
-		await fs.writeFile(options.outfile, html);
-	}
-
-	return options.write ? undefined : html;
+	return { htmlText: html, assets: outputFiles.assets };
 }
+
 module.exports = buildHTML;

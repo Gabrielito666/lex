@@ -1,19 +1,27 @@
 const buildJsx = require("#build-lib/build-jsx");
 const buildHTML = require("#build-lib/build-html");
 const path = require("path");
+const fs = require("fs").promises;
 
 const isHtml = process.argv.includes("--html");
 
+const main = async() =>
+{
 if(isHtml)
 {
 	const infile = path.resolve(process.cwd(), "test-lab/index.jsx");
 	const outfile = path.resolve(process.cwd(), "test-lab/output.html");
-	buildHTML.standart(infile, { write: true, outfile, minify: false });
-	
+	const out = await buildHTML.standart(infile, { minify: false });
+
+	await fs.writeFile(outfile, out.htmlText);
 }
 else
 {
 	const infile = path.resolve(process.cwd(), "test-lab/index.jsx");
 	const outfile = path.resolve(process.cwd(), "test-lab/output.js");
-	buildJsx.standart(infile, { write: true, outfile, minify: false });
+	const out = await buildJsx.standart(infile, { minify: false });
+
+	await fs.writeFile(outfile, out.bundle.text);
 }
+}
+main();

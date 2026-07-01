@@ -1,4 +1,4 @@
-<html lexid="27"><head lexid="25"><style>/* test-lab/css-2.css */
+<html><head><style>/* test-lab/css-2.css */
 h3 {
   color: red;
 }
@@ -8,6 +8,11 @@ h1 {
   color: blue;
 }
 h2 {
+  color: green;
+}
+
+/* test-lab/css-3.module.css */
+.css_3_counter p {
   color: green;
 }
 </style><script type="module">(() => {
@@ -213,7 +218,7 @@ h2 {
     const _element = document.createElement(tag);
     const _children = flattenChildren(children);
     if (["head", "html"].includes(tag)) {
-      _element.setAttribute("lexid", String(lexVariables.counter));
+      _element.setAttribute("lex_root", String(lexVariables.counter));
     }
     const needsHidrat = _props.ref || _props.__keep || Object.values(_props).some((val) => val instanceof State || typeof val === "function") || _children.some((ch) => ch instanceof State);
     if (needsHidrat) {
@@ -344,11 +349,16 @@ h2 {
   // node_modules/.pnpm/@lek-js+lex@file+/node_modules/@lek-js/lex/index.js
   var lex_default2 = lex_exports;
 
+  // test-lab/css-3.module.css
+  var css_3_default = {
+    counter: "css_3_counter"
+  };
+
   // test-lab/index.jsx
   var Layout = ({ children }) => /* @__PURE__ */ lex_default2.createElement("html", null, /* @__PURE__ */ lex_default2.createElement("head", null), /* @__PURE__ */ lex_default2.createElement("body", null, children));
   var Counter = () => {
     const [count, setCount] = useState(0);
-    return /* @__PURE__ */ lex_default2.createElement("article", null, /* @__PURE__ */ lex_default2.createElement("h3", null, "Contador"), /* @__PURE__ */ lex_default2.createElement("p", null, "Su numero es: ", /* @__PURE__ */ lex_default2.createElement("span", null, count)), /* @__PURE__ */ lex_default2.createElement("button", { onClick: () => {
+    return /* @__PURE__ */ lex_default2.createElement("article", { className: css_3_default.counter }, /* @__PURE__ */ lex_default2.createElement("h3", null, "Contador"), /* @__PURE__ */ lex_default2.createElement("p", null, "Su numero es: ", /* @__PURE__ */ lex_default2.createElement("span", null, count)), /* @__PURE__ */ lex_default2.createElement("button", { onClick: () => {
       setCount(count + 1);
     } }, "Incrementar"));
   };
@@ -395,4 +405,4 @@ h2 {
   };
   lex_default2.mount(/* @__PURE__ */ lex_default2.createElement(Layout, null, /* @__PURE__ */ lex_default2.createElement(Page, null)));
 })();
-</script></head><body><main><h1>Primera prueba de refactor</h1><article><h3>Contador</h3><p>Su numero es: <span lexid="3">0</span></p><button lexid="5">Incrementar</button></article><article><h3>Contador</h3><p>Su numero es: <span lexid="8">0</span></p><button lexid="10">Incrementar</button></article><section><label>Nombre: <input lexid="12" type="text"></label><button lexid="14">Enviar</button></section><aside><h4>Prueba con llamadas en diferentes partes</h4><input lexid="16" type="text"><button lexid="18">Enviar</button></aside><section lexid="21"><h1>loadding...</h1></section><button lexid="22">Activar alerta</button><button lexid="23">Desactivar alerta</button><h1 lexid="0" hidden="true">Alerta!!</h1></main></body></html>
+</script></head><body><main><h1>Primera prueba de refactor</h1><article class="css_3_counter"><h3>Contador</h3><p>Su numero es: <span lexid="3">0</span></p><button lexid="5">Incrementar</button></article><article class="css_3_counter"><h3>Contador</h3><p>Su numero es: <span lexid="8">0</span></p><button lexid="10">Incrementar</button></article><section><label>Nombre: <input lexid="12" type="text"></label><button lexid="14">Enviar</button></section><aside><h4>Prueba con llamadas en diferentes partes</h4><input lexid="16" type="text"><button lexid="18">Enviar</button></aside><section lexid="21"><h1>loadding...</h1></section><button lexid="22">Activar alerta</button><button lexid="23">Desactivar alerta</button><h1 lexid="0" hidden="true">Alerta!!</h1></main></body></html>

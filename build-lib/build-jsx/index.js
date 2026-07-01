@@ -1,19 +1,25 @@
 const esbuild = require("esbuild");
 const path = require("path");
 const buildHTMLTemplates = require("#build-lib/builder-templates");
+const loaders = require("#build-lib/loaders");
 
 /**
  * @import {OutputFile} from "esbuild";
  *
  * @typedef {{
  *	minify?: boolean,
- * }} Options
+ * }} BuildOptions
+ * @typedef {{
+ * 	bundle: OutputFile;
+ * 	css?: OutputFile;
+ * 	assets: OutputFile[];
+ * }} BuildOutput
  */
 
 /**
  * @param {string} pageJsx
- * @param {Options} options
- * @returns {Promise<OutputFile[]>}
+ * @param {BuildOptions} options
+ * @returns {Promise<BuildOutput>}
  */
 const buildJSX = (pageJsx, options={}) =>
 {
@@ -21,8 +27,8 @@ const buildJSX = (pageJsx, options={}) =>
 }
 /**
  * @param {string} pageJsx
- * @param {Options} options
- * @returns {Promise<OutputFile[]>}
+ * @param {BuildOptions} options
+ * @returns {Promise<BuildOutput>}
  */
 buildJSX.standart = async(pageJsx, options={}) =>
 {
@@ -32,8 +38,8 @@ buildJSX.standart = async(pageJsx, options={}) =>
 /**
  * @param {string} layoutJsx
  * @param {string} pageJsx
- * @param {Options} options
- * @returns {Promise<OutputFile[]>}
+ * @param {BuildOptions} options
+ * @returns {Promise<BuildOutput>}
  */
 buildJSX.layout = async(layoutJsx, pageJsx, options={}) =>
 {
@@ -44,8 +50,8 @@ buildJSX.layout = async(layoutJsx, pageJsx, options={}) =>
 /**
  * @param {string} stringCode
  * @param {string} resolveDir
- * @param {Options} options
- * @returns {Promise<OutputFile[]>}
+ * @param {BuildOptions} options
+ * @returns {Promise<BuildOutput>}
  */
 buildJSX.byStringCode = async(stringCode, resolveDir, options={}) =>
 {
@@ -64,15 +70,19 @@ buildJSX.byStringCode = async(stringCode, resolveDir, options={}) =>
 		jsxFragment: "Lex.Fragment",
 		write: false,
 		outfile: "lex-bundle.js",
-		loader: {
-			".css": "css"
-		}
+		assetNames: "assets/[name]-[hash].[ext]",
+		loader: loaders
 	});
 
 	if(out.errors.length > 0) throw out.errors[0];
-	if(out.outputFiles.length < 1) throw new Error("An unexpected error has occurred. There are no output files to return.");
 
-	return out.outputFiles;
+	const bundle = out.outputFiles.find(file => path.basename(file.path) === "lex-bundle.js");
+	if(!bundle) throw new Error("An unexpected error has occurred. The main bundle file was not found.");
+
+	const css = out.outputFiles.find(file => file.path.endsWith(".css"));
+	const assets = out.outputFiles.filter(file => (file !== bundle && file !== css));
+	
+	return { bundle, css, assets };
 }
 
 module.exports = buildJSX;

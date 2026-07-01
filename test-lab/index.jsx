@@ -1,5 +1,6 @@
 import Lex, {useState, useRef, useClient} from "@lek-js/lex";
 import "./css-1.css";
+import styles from "./css-3.module.css";
 
 const Layout = ({ children }) => <html>
 	<head>
@@ -14,7 +15,7 @@ const Counter = () =>
 {
 	const [count, setCount] = useState(0);
 
-	return <article>
+	return <article className={styles.counter}>
 		<h3>Contador</h3>
 		<p>Su numero es: <span>{count}</span></p>
 		<button onClick={() => {setCount(count+1)}}>Incrementar</button>

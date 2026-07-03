@@ -1,7 +1,17 @@
 {
   "name": "@lek-js/lex",
-  "version": "3.0.0",
-  "main": "index.js",
+  "version": "3.0.1",
+  "exports": {
+  	".": {
+		"import": "./lib/lex/index.js"
+	},
+	"./build-html": {
+		"require": "./build-lib/build-html/index.js"
+	},
+	"./build-jsx": {
+		"require": "./build-jsx/build-jsx/index.js"
+	}
+  },
   "scripts": {
     "test": "node --test",
     "build-lab": "node test-lab/build.js --html"

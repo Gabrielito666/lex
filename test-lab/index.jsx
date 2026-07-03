@@ -1,4 +1,4 @@
-import Lex, {useState, useRef, useClient} from "@lek-js/lex";
+import Lex, {useState, useRef, useClient, } from "@lek-js/lex";
 import "./css-1.css";
 import styles from "./css-3.module.css";
 import homero from "./homero.webp";

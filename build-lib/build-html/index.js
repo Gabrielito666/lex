@@ -1,16 +1,22 @@
 const { JSDOM } = require("jsdom");
-const esbuild = require("esbuild");
 const buildJSX = require("#build-lib/build-jsx");
 const buildHTMLTemplates = require("#build-lib/builder-templates");
 const path = require("path");
 const loaders = require("#build-lib/loaders");
+const safeBuild = require("#build-lib/safe-build");
 
 /**
  * @import {BuildOptions} from "#build-lib/build-jsx";
- * @import {OutputFile} from "esbuild";
+ * @import {OutputFile, Message, BuildFailure} from "esbuild";
  * @typedef {{
  *	htmlText: string;
  *	assets: OutputFile[];
+ *	error: null;
+ *	warnings: Message[];
+ * }|{
+ *	htmlText: null;
+ *	assets: null;
+ *	error: Error|BuildFailure;
  * }} BuildHTMLOutput
  */
 
@@ -18,11 +24,11 @@ const loaders = require("#build-lib/loaders");
  * @param {string} stringCode
  * @param {string} resolveDir
  * @param {boolean} [minify]
- * @returns {Promise<string>}
+ * @returns {Promise<string|Error|BuildFailure>}
  */
 const buildCodeToBuild = async(stringCode, resolveDir, minify) =>
 {
-	const out = await esbuild.build({
+	const result = await safeBuild({
 		stdin: {
 			contents: stringCode,
 			resolveDir,
@@ -47,6 +53,9 @@ const buildCodeToBuild = async(stringCode, resolveDir, minify) =>
 		}],
 		loader: loaders
 	});
+	if(result.error) return result.error;
+
+	const out = result.result;
 
 	if(out.errors.length > 0) throw out.errors[0];
 
@@ -98,6 +107,8 @@ buildHTML.byStringCode = async(stringCode, resolveDir, options) =>
 	const optionsToBuild = {...options, write: false}; // write: false is important method return a string
 	const outputFiles = await buildJSX.byStringCode(stringCode, resolveDir, optionsToBuild);
 
+	if(outputFiles.error) return { htmlText: null, assets: null, error: outputFiles.error }
+
 	const bundleJS = outputFiles.bundle;
 	const cssFile = outputFiles.css;
 
@@ -107,6 +118,7 @@ buildHTML.byStringCode = async(stringCode, resolveDir, options) =>
 	dom.window.EventTarget.prototype.removeEventListener = () => {};
 
 	const codeToBuild = await buildCodeToBuild(stringCode, resolveDir, options.minify);
+	if(codeToBuild instanceof Error) return { error: codeToBuild, htmlText: null, assets: null };
 
 	dom.window.eval(codeToBuild);
 
@@ -134,7 +146,7 @@ buildHTML.byStringCode = async(stringCode, resolveDir, options) =>
 
 	const html = htmlElement.outerHTML;
 
-	return { htmlText: html, assets: outputFiles.assets };
+	return { htmlText: html, assets: outputFiles.assets, error: null, warnings: outputFiles.warnings };
 }
 
 module.exports = buildHTML;

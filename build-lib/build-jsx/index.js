@@ -1,10 +1,10 @@
-const esbuild = require("esbuild");
 const path = require("path");
 const buildHTMLTemplates = require("#build-lib/builder-templates");
 const loaders = require("#build-lib/loaders");
+const safeBuild = require("#build-lib/safe-build");
 
 /**
- * @import {OutputFile} from "esbuild";
+ * @import {OutputFile, BuildFailure, Message} from "esbuild";
  *
  * @typedef {{
  *	minify?: boolean,
@@ -13,6 +13,13 @@ const loaders = require("#build-lib/loaders");
  * 	bundle: OutputFile;
  * 	css?: OutputFile;
  * 	assets: OutputFile[];
+ * 	error: null;
+ * 	warnings: Message[];
+ * }|{
+ *	bundle: null;
+ *	css: null;
+ *	assets: null;
+ *	error: BuildFailure|Error;
  * }} BuildOutput
  */
 
@@ -55,8 +62,7 @@ buildJSX.layout = async(layoutJsx, pageJsx, options={}) =>
  */
 buildJSX.byStringCode = async(stringCode, resolveDir, options={}) =>
 {
-	const out = await esbuild.build
-	({
+	const safeResult = await safeBuild({
 		stdin:
 		{
 			contents: stringCode,
@@ -74,6 +80,18 @@ buildJSX.byStringCode = async(stringCode, resolveDir, options={}) =>
 		loader: loaders
 	});
 
+	if(safeResult.error)
+	{
+		return {
+			error: safeResult.error,
+			bundle: null,
+			css: null,
+			assets: null
+		};
+	}
+
+	const out = safeResult.result;
+
 	if(out.errors.length > 0) throw out.errors[0];
 
 	const bundle = out.outputFiles.find(file => path.basename(file.path) === "lex-bundle.js");
@@ -82,7 +100,7 @@ buildJSX.byStringCode = async(stringCode, resolveDir, options={}) =>
 	const css = out.outputFiles.find(file => file.path.endsWith(".css"));
 	const assets = out.outputFiles.filter(file => (file !== bundle && file !== css));
 	
-	return { bundle, css, assets };
+	return { bundle, css, assets, error: null, warnings: out.warnings };
 }
 
 module.exports = buildJSX;

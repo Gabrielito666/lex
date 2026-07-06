@@ -12,6 +12,7 @@ if(isHtml)
 	const infile = path.resolve(process.cwd(), "test-lab/index.jsx");
 	const outfile = path.resolve(process.cwd(), "test-lab/output.html");
 	const out = await buildHTML.standart(infile, { minify: false });
+	if(out.error) throw out.error;
 
 	await fs.writeFile(outfile, out.htmlText);
 }
@@ -21,6 +22,7 @@ else
 	const outfile = path.resolve(process.cwd(), "test-lab/output.js");
 	const out = await buildJsx.standart(infile, { minify: false });
 
+	if(out.error) throw out.error;
 	await fs.writeFile(outfile, out.bundle.text);
 }
 }

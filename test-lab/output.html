@@ -16,27 +16,7 @@ h2 {
   color: green;
 }
 </style><script type="module">(() => {
-  var __defProp = Object.defineProperty;
-  var __export = (target, all) => {
-    for (var name in all)
-      __defProp(target, name, { get: all[name], enumerable: true });
-  };
-
-  // node_modules/.pnpm/@lek-js+lex@file+/node_modules/@lek-js/lex/lib/lex/index.js
-  var lex_exports = {};
-  __export(lex_exports, {
-    Fragment: () => Fragment,
-    State: () => State,
-    createElement: () => createElement,
-    default: () => lex_default,
-    mount: () => mount,
-    startClient: () => startClient,
-    useClient: () => useClient,
-    useRef: () => useRef,
-    useState: () => useState
-  });
-
-  // node_modules/.pnpm/@lek-js+lex@file+/node_modules/@lek-js/lex/lib/lex-variables/index.js
+  // lib/lex-variables/index.js
   var lexVariables = {
     counter: 0,
     /**@type {Array<() =>any>}*/
@@ -45,7 +25,7 @@ h2 {
     mode: "select"
   };
 
-  // node_modules/.pnpm/@lek-js+lex@file+/node_modules/@lek-js/lex/lib/state/index.js
+  // lib/state/index.js
   var State = class {
     /**
      * @param {T} initValue
@@ -93,7 +73,7 @@ h2 {
     }];
   };
 
-  // node_modules/.pnpm/@lek-js+lex@file+/node_modules/@lek-js/lex/lib/flatten-childs/index.js
+  // lib/flatten-childs/index.js
   var flattenChildren = (children) => children.reduce(
     /**
      * @param {Array<Element|State<any>|string|null>} acc
@@ -107,7 +87,7 @@ h2 {
     []
   );
 
-  // node_modules/.pnpm/@lek-js+lex@file+/node_modules/@lek-js/lex/lib/process-props/index.js
+  // lib/process-props/index.js
   var analyseProp = (key, value) => {
     if (key.startsWith("on") && typeof value === "function") {
       return { key: key.toLowerCase().replace(/^on/, ""), type: "event", value };
@@ -171,7 +151,7 @@ h2 {
     }
   });
 
-  // node_modules/.pnpm/@lek-js+lex@file+/node_modules/@lek-js/lex/lib/process-children/index.js
+  // lib/process-children/index.js
   var asignChildren = (element, children) => flattenChildren(children).forEach((ch, i) => {
     if (!ch) return;
     if (ch instanceof window.Node) {
@@ -211,7 +191,7 @@ h2 {
     return;
   });
 
-  // node_modules/.pnpm/@lek-js+lex@file+/node_modules/@lek-js/lex/lib/create-element/index.js
+  // lib/create-element/index.js
   var createElementFromString_buildMode = (tag, props, ...children) => {
     const _props = props || /**@type{Record<string, any>}*/
     {};
@@ -309,10 +289,10 @@ h2 {
     );
   };
 
-  // node_modules/.pnpm/@lek-js+lex@file+/node_modules/@lek-js/lex/lib/fragment/index.js
+  // lib/fragment/index.js
   var Fragment = ({ children }) => children;
 
-  // node_modules/.pnpm/@lek-js+lex@file+/node_modules/@lek-js/lex/lib/mount/index.js
+  // lib/mount/index.js
   var startClient = () => {
     if (lexVariables.mode === "select") {
       lexVariables.mode = "create";
@@ -324,16 +304,16 @@ h2 {
     startClient();
   };
 
-  // node_modules/.pnpm/@lek-js+lex@file+/node_modules/@lek-js/lex/lib/ref/index.js
+  // lib/ref/index.js
   var useRef = (initValue) => ({ current: initValue });
 
-  // node_modules/.pnpm/@lek-js+lex@file+/node_modules/@lek-js/lex/lib/use-client/index.js
+  // lib/use-client/index.js
   var useClient = (handler) => {
     if (typeof handler !== "function") throw new Error("useClient only accepts functions");
     lexVariables.clientStack.push(handler);
   };
 
-  // node_modules/.pnpm/@lek-js+lex@file+/node_modules/@lek-js/lex/lib/lex/index.js
+  // lib/lex/index.js
   var Lex = {
     createElement,
     Fragment,
@@ -346,9 +326,6 @@ h2 {
   };
   var lex_default = Lex;
 
-  // node_modules/.pnpm/@lek-js+lex@file+/node_modules/@lek-js/lex/index.js
-  var lex_default2 = lex_exports;
-
   // test-lab/css-3.module.css
   var css_3_default = {
     counter: "css_3_counter"
@@ -358,10 +335,10 @@ h2 {
   var homero_default = "./lex-assets/homero-Z3BSZQBE.webp";
 
   // test-lab/index.jsx
-  var Layout = ({ children }) => /* @__PURE__ */ lex_default2.createElement("html", null, /* @__PURE__ */ lex_default2.createElement("head", null), /* @__PURE__ */ lex_default2.createElement("body", null, children));
+  var Layout = ({ children }) => /* @__PURE__ */ lex_default.createElement("html", null, /* @__PURE__ */ lex_default.createElement("head", null), /* @__PURE__ */ lex_default.createElement("body", null, children));
   var Counter = () => {
     const [count, setCount] = useState(0);
-    return /* @__PURE__ */ lex_default2.createElement("article", { className: css_3_default.counter }, /* @__PURE__ */ lex_default2.createElement("h3", null, "Contador"), /* @__PURE__ */ lex_default2.createElement("p", null, "Su numero es: ", /* @__PURE__ */ lex_default2.createElement("span", null, count)), /* @__PURE__ */ lex_default2.createElement("button", { onClick: () => {
+    return /* @__PURE__ */ lex_default.createElement("article", { className: css_3_default.counter }, /* @__PURE__ */ lex_default.createElement("h3", null, "Contador"), /* @__PURE__ */ lex_default.createElement("p", null, "Su numero es: ", /* @__PURE__ */ lex_default.createElement("span", null, count)), /* @__PURE__ */ lex_default.createElement("button", { onClick: () => {
       setCount(count + 1);
     } }, "Incrementar"));
   };
@@ -370,11 +347,11 @@ h2 {
     const onClick = () => {
       console.log("el input dice:", inputRef.current.value);
     };
-    return /* @__PURE__ */ lex_default2.createElement("section", null, /* @__PURE__ */ lex_default2.createElement("label", null, "Nombre: ", /* @__PURE__ */ lex_default2.createElement("input", { type: "text", ref: inputRef })), /* @__PURE__ */ lex_default2.createElement("button", { onClick }, "Enviar"));
+    return /* @__PURE__ */ lex_default.createElement("section", null, /* @__PURE__ */ lex_default.createElement("label", null, "Nombre: ", /* @__PURE__ */ lex_default.createElement("input", { type: "text", ref: inputRef })), /* @__PURE__ */ lex_default.createElement("button", { onClick }, "Enviar"));
   };
   var ComponentWithDifferentCalls = () => {
-    const miInput = /* @__PURE__ */ lex_default2.createElement("input", { type: "text", __keep: true });
-    return /* @__PURE__ */ lex_default2.createElement("aside", null, /* @__PURE__ */ lex_default2.createElement("h4", null, "Prueba con llamadas en diferentes partes"), miInput, /* @__PURE__ */ lex_default2.createElement("button", { onClick: () => {
+    const miInput = /* @__PURE__ */ lex_default.createElement("input", { type: "text", __keep: true });
+    return /* @__PURE__ */ lex_default.createElement("aside", null, /* @__PURE__ */ lex_default.createElement("h4", null, "Prueba con llamadas en diferentes partes"), miInput, /* @__PURE__ */ lex_default.createElement("button", { onClick: () => {
       console.log(miInput.value);
     } }, "Enviar"));
   };
@@ -385,10 +362,10 @@ h2 {
         loaderRef.current?.remove();
       }, 3e3);
     });
-    return /* @__PURE__ */ lex_default2.createElement("section", { ref: loaderRef }, /* @__PURE__ */ lex_default2.createElement("h1", null, "loadding..."));
+    return /* @__PURE__ */ lex_default.createElement("section", { ref: loaderRef }, /* @__PURE__ */ lex_default.createElement("h1", null, "loadding..."));
   };
   var useAlert = () => {
-    const alert = /* @__PURE__ */ lex_default2.createElement("h1", { __keep: true, hidden: true }, "Alerta!!");
+    const alert = /* @__PURE__ */ lex_default.createElement("h1", { __keep: true, hidden: true }, "Alerta!!");
     const Component = () => alert;
     const start = () => {
       alert.hidden = false;
@@ -405,8 +382,8 @@ h2 {
     });
     console.log("Este console.log deber\xEDa verse en el navegador y en la terminal al buildeal");
     const [Alert, startAlert, stopAlert] = useAlert();
-    return /* @__PURE__ */ lex_default2.createElement("main", null, /* @__PURE__ */ lex_default2.createElement("h1", null, "Primera prueba de refactor"), /* @__PURE__ */ lex_default2.createElement(Counter, null), /* @__PURE__ */ lex_default2.createElement(Counter, null), /* @__PURE__ */ lex_default2.createElement(ButtonAndInput, null), /* @__PURE__ */ lex_default2.createElement(ComponentWithDifferentCalls, null), /* @__PURE__ */ lex_default2.createElement(Loader, null), /* @__PURE__ */ lex_default2.createElement("button", { onClick: startAlert }, "Activar alerta"), /* @__PURE__ */ lex_default2.createElement("button", { onClick: stopAlert }, "Desactivar alerta"), /* @__PURE__ */ lex_default2.createElement(Alert, null));
+    return /* @__PURE__ */ lex_default.createElement("main", null, /* @__PURE__ */ lex_default.createElement("h1", null, "Primera prueba de refactor"), /* @__PURE__ */ lex_default.createElement(Counter, null), /* @__PURE__ */ lex_default.createElement(Counter, null), /* @__PURE__ */ lex_default.createElement(ButtonAndInput, null), /* @__PURE__ */ lex_default.createElement(ComponentWithDifferentCalls, null), /* @__PURE__ */ lex_default.createElement(Loader, null), /* @__PURE__ */ lex_default.createElement("button", { onClick: startAlert }, "Activar alerta"), /* @__PURE__ */ lex_default.createElement("button", { onClick: stopAlert }, "Desactivar alerta"), /* @__PURE__ */ lex_default.createElement(Alert, null));
   };
-  lex_default2.mount(/* @__PURE__ */ lex_default2.createElement(Layout, null, /* @__PURE__ */ lex_default2.createElement(Page, null)));
+  lex_default.mount(/* @__PURE__ */ lex_default.createElement(Layout, null, /* @__PURE__ */ lex_default.createElement(Page, null)));
 })();
 </script></head><body><main><h1>Primera prueba de refactor</h1><article class="css_3_counter"><h3>Contador</h3><p>Su numero es: <span lexid="3">0</span></p><button lexid="5">Incrementar</button></article><article class="css_3_counter"><h3>Contador</h3><p>Su numero es: <span lexid="8">0</span></p><button lexid="10">Incrementar</button></article><section><label>Nombre: <input lexid="12" type="text"></label><button lexid="14">Enviar</button></section><aside><h4>Prueba con llamadas en diferentes partes</h4><input lexid="16" type="text"><button lexid="18">Enviar</button></aside><section lexid="21"><h1>loadding...</h1></section><button lexid="22">Activar alerta</button><button lexid="23">Desactivar alerta</button><h1 lexid="0" hidden="true">Alerta!!</h1></main></body></html>

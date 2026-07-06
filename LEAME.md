@@ -311,15 +311,35 @@ Estos métodos agradablemente manejan los imports de css e incrustan los estilos
 - **`minify`**: Minifica o no el JavaScript dentro del HTML
 
 #### return-type
-Estos métodos retornan un objeto con la siguiente firma:
+Estos métodos retornan un **discriminated union** que siempre debes revisar antes de usar los datos:
+
 ```ts
 {
 	htmlText: string;
 	assets: import("esbuild").OutputFile[];
+	error: null;
+	warnings: import("esbuild").Message[];
+} | {
+	htmlText: null;
+	assets: null;
+	error: Error | import("esbuild").BuildFailure;
 }
 ```
 
-Luego debes escribir el archivo con fs. y puedes manejar los assets si utilizas imports de imagenes o fonts.
+En caso de éxito `error` es `null` y tienes acceso a `htmlText`, `assets` y `warnings`.
+En caso de error `error` trae el problema y los demás campos son `null`.
+
+```js
+const result = await buildHTML.standart("pagina.jsx");
+if (result.error)
+{
+	console.error("Error compilando:", result.error);
+	return;
+}
+// result.htmlText, result.assets, result.warnings disponibles
+```
+
+Luego debes escribir el archivo con `fs` y puedes manejar los assets si utilizas imports de imágenes o fonts.
 
 ### build-jsx
 
@@ -328,12 +348,31 @@ También tiene una versión `standart`, `layout` y `byStringCode`, pero retorna 
 Esto es para integración con frameworks o control más avanzado. Hay que asegurarse de hidratar bien el HTML.
 
 #### return-type
+Mismo patrón de **discriminated union**:
+
 ```ts
 {
-	bundle: import("esbuild".OutputFile);
-	css?: import("esbuild".OutputFile);
-	assets: import("esbuild".OutputFile)[];
+	bundle: import("esbuild").OutputFile;
+	css?: import("esbuild").OutputFile;
+	assets: import("esbuild").OutputFile[];
+	error: null;
+	warnings: import("esbuild").Message[];
+} | {
+	bundle: null;
+	css: null;
+	assets: null;
+	error: Error | import("esbuild").BuildFailure;
 }
+```
+
+```js
+const result = await buildJSX.standart("pagina.jsx");
+if (result.error)
+{
+	console.error("Error compilando:", result.error);
+	return;
+}
+// result.bundle, result.css, result.assets, result.warnings disponibles
 ```
 
 ## ¿Por qué LEX?

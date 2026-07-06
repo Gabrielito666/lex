@@ -314,12 +314,32 @@ These methods gracefully handle CSS imports and embed the styles into the HTML.
 - **`minify`**: Whether to minify the JavaScript inside the HTML or not
 
 #### return-type
-These methods return an object with the following signature:
+These methods return a **discriminated union** that you should always check before using the data:
+
 ```ts
 {
 	htmlText: string;
 	assets: import("esbuild").OutputFile[];
+	error: null;
+	warnings: import("esbuild").Message[];
+} | {
+	htmlText: null;
+	assets: null;
+	error: Error | import("esbuild").BuildFailure;
 }
+```
+
+On success, `error` is `null` and you have access to `htmlText`, `assets`, and `warnings`.
+On error, `error` contains the problem and all other fields are `null`.
+
+```js
+const result = await buildHTML.standart("page.jsx");
+if (result.error)
+{
+	console.error("Error compiling:", result.error);
+	return;
+}
+// result.htmlText, result.assets, result.warnings available
 ```
 
 You must then write the file with `fs` and handle the assets if you use image or font imports.
@@ -331,12 +351,31 @@ It also has a `standart`, `layout`, and `byStringCode` version, but it returns t
 This is for integration with frameworks or more advanced control. You need to make sure to hydrate the HTML properly.
 
 #### return-type
+Same **discriminated union** pattern:
+
 ```ts
 {
-	bundle: import("esbuild".OutputFile);
-	css?: import("esbuild".OutputFile);
-	assets: import("esbuild".OutputFile)[];
+	bundle: import("esbuild").OutputFile;
+	css?: import("esbuild").OutputFile;
+	assets: import("esbuild").OutputFile[];
+	error: null;
+	warnings: import("esbuild").Message[];
+} | {
+	bundle: null;
+	css: null;
+	assets: null;
+	error: Error | import("esbuild").BuildFailure;
 }
+```
+
+```js
+const result = await buildJSX.standart("page.jsx");
+if (result.error)
+{
+	console.error("Error compiling:", result.error);
+	return;
+}
+// result.bundle, result.css, result.assets, result.warnings available
 ```
 
 ## Why LEX?

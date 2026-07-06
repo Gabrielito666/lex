@@ -76,7 +76,7 @@ buildJSX.byStringCode = async(stringCode, resolveDir, options={}) =>
 		jsxFragment: "Lex.Fragment",
 		write: false,
 		outfile: "lex-bundle.js",
-		assetNames: "lex-assets/[name]-[hash]",
+		assetNames: "__assets/[name]-[hash]",
 		loader: loaders
 	});
 
@@ -91,8 +91,6 @@ buildJSX.byStringCode = async(stringCode, resolveDir, options={}) =>
 	}
 
 	const out = safeResult.result;
-
-	if(out.errors.length > 0) throw out.errors[0];
 
 	const bundle = out.outputFiles.find(file => path.basename(file.path) === "lex-bundle.js");
 	if(!bundle) throw new Error("An unexpected error has occurred. The main bundle file was not found.");

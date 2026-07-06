@@ -41,7 +41,7 @@ const buildCodeToBuild = async(stringCode, resolveDir, minify) =>
 		jsxFragment: "Lex.Fragment",
 		write: false,
 		outfile: "lex-code-to-build.js",
-		assetNames: "./lex-assets/[name]-[hash]",
+		assetNames: "./__assets/[name]-[hash]",
 		plugins: [{
 			name: 'replace-module',
 			setup(build) {
@@ -56,9 +56,6 @@ const buildCodeToBuild = async(stringCode, resolveDir, minify) =>
 	if(result.error) return result.error;
 
 	const out = result.result;
-
-	if(out.errors.length > 0) throw out.errors[0];
-
 	const codeFile = out.outputFiles.find(file => path.basename(file.path) === "lex-code-to-build.js");
 
 	if(!codeFile) throw new Error("An unexpected error has occurred. The main bundle file was not found.");

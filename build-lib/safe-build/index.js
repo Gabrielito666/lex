@@ -1,13 +1,13 @@
 /**
  * @file
  * @source ./build-lib/safe-build/index.js
- * @description Wraper from esbuild.build() with consistent output
+ * @description Wrapper from esbuild.build() with consistent output
  */
 
 const esbuild = require("esbuild");
 
 /**
- * @import {BuildOptions, BuildFailure, BuildResult, SameShape} from "esbuild";
+ * @import {BuildOptions, BuildFailure, BuildResult} from "esbuild";
  */
 
 /**

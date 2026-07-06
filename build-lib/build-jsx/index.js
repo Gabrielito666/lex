@@ -76,6 +76,7 @@ buildJSX.byStringCode = async(stringCode, resolveDir, options={}) =>
 		jsxFragment: "Lex.Fragment",
 		write: false,
 		outfile: "lex-bundle.js",
+		publicPath: "/",
 		assetNames: "__assets/[name]-[hash]",
 		loader: loaders
 	});

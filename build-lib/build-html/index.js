@@ -41,7 +41,8 @@ const buildCodeToBuild = async(stringCode, resolveDir, minify) =>
 		jsxFragment: "Lex.Fragment",
 		write: false,
 		outfile: "lex-code-to-build.js",
-		assetNames: "./__assets/[name]-[hash]",
+		publicPath: "/",
+		assetNames: "/__assets/[name]-[hash]",
 		plugins: [{
 			name: 'replace-module',
 			setup(build) {

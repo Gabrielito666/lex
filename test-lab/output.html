@@ -16,11 +16,38 @@ h2 {
   color: green;
 }
 </style><script type="module">(() => {
+  // lib/use-client-handler/index.js
+  var UseClientHandler = class {
+    /**@type {(() =>any)[]}*/
+    #stack = [];
+    /**@type {boolean}*/
+    #prevToMount = true;
+    /**
+     * @param {()=>any} cb
+     * @returns {void}
+     */
+    add(cb) {
+      if (this.#prevToMount) {
+        this.#stack.push(cb);
+        return;
+      }
+      cb();
+    }
+    setPostMountMode() {
+      this.#prevToMount = false;
+      while (true) {
+        const cb = this.#stack.shift();
+        if (!cb) break;
+        cb();
+      }
+    }
+  };
+  var use_client_handler_default = UseClientHandler;
+
   // lib/lex-variables/index.js
   var lexVariables = {
     counter: 0,
-    /**@type {Array<() =>any>}*/
-    clientStack: [],
+    clientStack: new use_client_handler_default(),
     /**@type {"select"|"create"|"build"}*/
     mode: "select"
   };
@@ -296,8 +323,7 @@ h2 {
   var startClient = () => {
     if (lexVariables.mode === "select") {
       lexVariables.mode = "create";
-      lexVariables.clientStack.forEach((handler) => handler());
-      lexVariables.clientStack.length = 0;
+      lexVariables.clientStack.setPostMountMode();
     }
   };
   var mount = (mainComponent) => {
@@ -310,7 +336,7 @@ h2 {
   // lib/use-client/index.js
   var useClient = (handler) => {
     if (typeof handler !== "function") throw new Error("useClient only accepts functions");
-    lexVariables.clientStack.push(handler);
+    lexVariables.clientStack.add(handler);
   };
 
   // lib/lex/index.js
@@ -332,7 +358,7 @@ h2 {
   };
 
   // test-lab/homero.webp
-  var homero_default = "./__assets/homero-Z3BSZQBE.webp";
+  var homero_default = "/__assets/homero-Z3BSZQBE.webp";
 
   // test-lab/index.jsx
   var Layout = ({ children }) => /* @__PURE__ */ lex_default.createElement("html", null, /* @__PURE__ */ lex_default.createElement("head", null), /* @__PURE__ */ lex_default.createElement("body", null, children));

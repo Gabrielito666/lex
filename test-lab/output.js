@@ -1,10 +1,38 @@
 (() => {
+  // lib/use-client-handler/index.js
+  var UseClientHandler = class {
+    /**@type {(() =>any)[]}*/
+    #stack = [];
+    /**@type {boolean}*/
+    #prevToMount = true;
+    /**
+     * @param {()=>any} cb
+     * @returns {void}
+     */
+    add(cb) {
+      if (this.#prevToMount) {
+        this.#stack.push(cb);
+        return;
+      }
+      cb();
+    }
+    setPostMountMode() {
+      this.#prevToMount = false;
+      while (true) {
+        const cb = this.#stack.shift();
+        if (!cb) break;
+        cb();
+      }
+    }
+  };
+  var use_client_handler_default = UseClientHandler;
+
   // lib/lex-variables/index.js
   var lexVariables = {
     counter: 0,
-    /**@type {Array<() =>any>}*/
-    clientStack: [],
-    selectMode: true
+    clientStack: new use_client_handler_default(),
+    /**@type {"select"|"create"|"build"}*/
+    mode: "select"
   };
 
   // lib/state/index.js
@@ -69,10 +97,13 @@
     []
   );
 
-  // lib/create-element/index.js
+  // lib/process-props/index.js
   var analyseProp = (key, value) => {
     if (key.startsWith("on") && typeof value === "function") {
-      return { key: key.toLowerCase(), type: "event", value };
+      return { key: key.toLowerCase().replace(/^on/, ""), type: "event", value };
+    }
+    if (key === "__keep") {
+      return { key, value, type: "keep" };
     }
     if (key === "className") {
       return { key: "class", type: "attribute", value };
@@ -83,7 +114,7 @@
     if (key === "htmlFor") {
       return { key: "for", type: "attribute", value };
     }
-    return { key: key.toLowerCase().replace(/^on/, ""), type: "attribute", value };
+    return { key: key.toLowerCase(), type: "attribute", value };
   };
   var asignProp = (prop, element) => {
     if (prop.type === "attribute") {
@@ -99,50 +130,146 @@
       return;
     }
   };
-  var createElementFromString = (tag, props, ...children) => {
-    const _props = props || {};
-    const element = lexVariables.selectMode ? document.querySelector(`[lexid="${lexVariables.counter++}"]`) : document.createElement(tag);
-    if (element === null) {
-      throw new Error("An element could not be found when initializing the application. Make sure you do not execute dynamic or non-deterministic code before the mounting process is complete.");
+  var hydrateProp = (prop, element) => {
+    if (prop.type === "event") {
+      element.addEventListener(prop.key, prop.value);
+      return;
     }
-    ;
-    Object.entries(_props).forEach(([key, value]) => {
-      const prop = analyseProp(key, value);
-      asignProp(prop, element);
-      if (value instanceof State) {
-        value.appendOnChange((newValue) => {
-          prop.value = newValue;
-          asignProp(prop, element);
-        });
-      }
-    });
-    flattenChildren(children).forEach((ch, i) => {
-      if (ch === null) return;
-      if (lexVariables.selectMode && ch instanceof State) {
-        const textNode2 = element.childNodes[i];
-        ch.appendOnChange((newValue) => {
-          textNode2.nodeValue = newValue;
-        });
-        return;
-      }
-      if (ch instanceof window.Node) {
-        element.appendChild(ch);
-        return;
-      }
+    if (prop.type === "ref") {
+      prop.value.current = element;
+      return;
+    }
+  };
+  var asignProps = (element, props) => Object.entries(props).forEach(([key, value]) => {
+    const prop = analyseProp(key, value);
+    asignProp(prop, element);
+    if (value instanceof State) {
+      value.appendOnChange((newValue) => {
+        prop.value = newValue;
+        asignProp(prop, element);
+      });
+    }
+  });
+  var hydrateProps = (element, props) => Object.entries(props).forEach(([key, value]) => {
+    const prop = analyseProp(key, value);
+    hydrateProp(prop, element);
+    if (value instanceof State) {
+      value.appendOnChange((newValue) => {
+        prop.value = newValue;
+        asignProp(prop, element);
+      });
+    }
+  });
+
+  // lib/process-children/index.js
+  var asignChildren = (element, children) => flattenChildren(children).forEach((ch, i) => {
+    if (!ch) return;
+    if (ch instanceof window.Node) {
+      element.appendChild(ch);
+      return;
+    }
+    if (typeof ch === "string") {
       const textNode = document.createTextNode(String(ch));
       element.appendChild(textNode);
-      if (ch instanceof State) {
-        ch.appendOnChange((newValue) => {
-          textNode.nodeValue = newValue;
-        });
-      }
       return;
-    });
+    }
+    if (ch instanceof State) {
+      const textNode = document.createTextNode(ch.get());
+      element.appendChild(textNode);
+      ch.appendOnChange((newValue) => {
+        textNode.nodeValue = newValue;
+      });
+      return;
+    }
+    return;
+  });
+  var hydrateChildren = (element, children) => flattenChildren(children).forEach((ch, i) => {
+    if (!ch) return;
+    if (ch instanceof window.Node || typeof ch === "string") {
+      return;
+    }
+    if (ch instanceof State) {
+      const textNode = element.childNodes[i] || Array.from(element.childNodes).find((chn) => chn.textContent === ch.get());
+      if (!textNode) {
+        throw new Error("Unexpected error while hydrating an element. The `state` object can only be used as the sole child of an element, or without adjacent `string` siblings. It cannot be used on elements that will modify their children, or with children that may be null. Best practice is to use it on tags that will not change the order or number of their children.");
+      }
+      ch.appendOnChange((newValue) => {
+        textNode.nodeValue = newValue;
+      });
+      return;
+    }
+    return;
+  });
+
+  // lib/create-element/index.js
+  var createElementFromString_buildMode = (tag, props, ...children) => {
+    const _props = props || /**@type{Record<string, any>}*/
+    {};
+    const _element = document.createElement(tag);
+    const _children = flattenChildren(children);
+    if (["head", "html"].includes(tag)) {
+      _element.setAttribute("lex_root", String(lexVariables.counter));
+    }
+    const needsHidrat = _props.ref || _props.__keep || Object.values(_props).some((val) => val instanceof State || typeof val === "function") || _children.some((ch) => ch instanceof State);
+    if (needsHidrat) {
+      _element.setAttribute("lexid", String(lexVariables.counter));
+    }
+    asignProps(_element, _props);
+    asignChildren(_element, _children);
     lexVariables.counter++;
     return (
       /**@type {R}*/
-      element
+      /**@type {unknown}*/
+      _element
     );
+  };
+  var createElementFromString_createMode = (tag, props, ...children) => {
+    const _props = props || /**@type{Record<string, any>}*/
+    {};
+    const _element = document.createElement(tag);
+    const _children = flattenChildren(children);
+    asignProps(_element, _props);
+    asignChildren(_element, _children);
+    return (
+      /**@type {R}*/
+      /**@type {unknown}*/
+      _element
+    );
+  };
+  var createElementFromString_selectMode = (tag, props, ...children) => {
+    const _props = props || /**@type{Record<string, any>}*/
+    {};
+    const _children = flattenChildren(children);
+    const needsHidrat = _props.ref || _props.__keep || Object.values(_props).some((val) => val instanceof State || typeof val === "function") || _children.some((ch) => ch instanceof State);
+    if (needsHidrat) {
+      const _element = document.querySelector(`[lexid="${lexVariables.counter}"]`);
+      if (!_element) {
+        throw new Error("No element requiring hydration was found. Make sure you do not include dynamic or non-deterministic code in your app's main tree during the app build process.");
+      }
+      hydrateProps(_element, _props);
+      hydrateChildren(_element, _children);
+      lexVariables.counter++;
+      return (
+        /**@type {R}*/
+        /**@type {unknown}*/
+        _element
+      );
+    }
+    lexVariables.counter++;
+    return (
+      /**@type {R}*/
+      /**@type {unknown}*/
+      null
+    );
+  };
+  var createElementFromString = (tag, props, ...children) => {
+    if (lexVariables.mode === "select") {
+      return createElementFromString_selectMode(tag, props, ...children);
+    }
+    if (lexVariables.mode === "create") {
+      return createElementFromString_createMode(tag, props, ...children);
+    }
+    return createElementFromString_buildMode(tag, props, ...children);
   };
   var createElementFromFunction = (tag, props, ...children) => {
     const _props = props || {};
@@ -177,10 +304,9 @@
 
   // lib/mount/index.js
   var startClient = () => {
-    if (lexVariables.selectMode) {
-      lexVariables.selectMode = false;
-      lexVariables.clientStack.forEach((handler) => handler());
-      lexVariables.clientStack.length = 0;
+    if (lexVariables.mode === "select") {
+      lexVariables.mode = "create";
+      lexVariables.clientStack.setPostMountMode();
     }
   };
   var mount = (mainComponent) => {
@@ -193,7 +319,7 @@
   // lib/use-client/index.js
   var useClient = (handler) => {
     if (typeof handler !== "function") throw new Error("useClient only accepts functions");
-    lexVariables.clientStack.push(handler);
+    lexVariables.clientStack.add(handler);
   };
 
   // lib/lex/index.js
@@ -209,10 +335,63 @@
   };
   var lex_default = Lex;
 
+  // test-lab/css-3.module.css
+  var css_3_default = {
+    counter: "css_3_counter"
+  };
+
+  // test-lab/homero.webp
+  var homero_default = "/__assets/homero-Z3BSZQBE.webp";
+
   // test-lab/index.jsx
   var Layout = ({ children }) => /* @__PURE__ */ lex_default.createElement("html", null, /* @__PURE__ */ lex_default.createElement("head", null), /* @__PURE__ */ lex_default.createElement("body", null, children));
+  var Counter = () => {
+    const [count, setCount] = useState(0);
+    return /* @__PURE__ */ lex_default.createElement("article", { className: css_3_default.counter }, /* @__PURE__ */ lex_default.createElement("h3", null, "Contador"), /* @__PURE__ */ lex_default.createElement("p", null, "Su numero es: ", /* @__PURE__ */ lex_default.createElement("span", null, count)), /* @__PURE__ */ lex_default.createElement("button", { onClick: () => {
+      setCount(count + 1);
+    } }, "Incrementar"));
+  };
+  var ButtonAndInput = () => {
+    const inputRef = useRef();
+    const onClick = () => {
+      console.log("el input dice:", inputRef.current.value);
+    };
+    return /* @__PURE__ */ lex_default.createElement("section", null, /* @__PURE__ */ lex_default.createElement("label", null, "Nombre: ", /* @__PURE__ */ lex_default.createElement("input", { type: "text", ref: inputRef })), /* @__PURE__ */ lex_default.createElement("button", { onClick }, "Enviar"));
+  };
+  var ComponentWithDifferentCalls = () => {
+    const miInput = /* @__PURE__ */ lex_default.createElement("input", { type: "text", __keep: true });
+    return /* @__PURE__ */ lex_default.createElement("aside", null, /* @__PURE__ */ lex_default.createElement("h4", null, "Prueba con llamadas en diferentes partes"), miInput, /* @__PURE__ */ lex_default.createElement("button", { onClick: () => {
+      console.log(miInput.value);
+    } }, "Enviar"));
+  };
+  var Loader = () => {
+    const loaderRef = useRef();
+    window.addEventListener("load", () => {
+      setTimeout(() => {
+        loaderRef.current?.remove();
+      }, 3e3);
+    });
+    return /* @__PURE__ */ lex_default.createElement("section", { ref: loaderRef }, /* @__PURE__ */ lex_default.createElement("h1", null, "loadding..."));
+  };
+  var useAlert = () => {
+    const alert = /* @__PURE__ */ lex_default.createElement("h1", { __keep: true, hidden: true }, "Alerta!!");
+    const Component = () => alert;
+    const start = () => {
+      alert.hidden = false;
+    };
+    const stop = () => {
+      alert.hidden = true;
+    };
+    return [Component, start, stop];
+  };
   var Page = () => {
-    return /* @__PURE__ */ lex_default.createElement("main", null, /* @__PURE__ */ lex_default.createElement("h1", null, "Primera prueba de refactor"));
+    useClient(() => {
+      console.log("Este console.log solo deber\xEDa verse en el navegador y no en terminal al buildeal");
+      console.log(homero_default);
+    });
+    console.log("Este console.log deber\xEDa verse en el navegador y en la terminal al buildeal");
+    const [Alert, startAlert, stopAlert] = useAlert();
+    return /* @__PURE__ */ lex_default.createElement("main", null, /* @__PURE__ */ lex_default.createElement("h1", null, "Primera prueba de refactor"), /* @__PURE__ */ lex_default.createElement(Counter, null), /* @__PURE__ */ lex_default.createElement(Counter, null), /* @__PURE__ */ lex_default.createElement(ButtonAndInput, null), /* @__PURE__ */ lex_default.createElement(ComponentWithDifferentCalls, null), /* @__PURE__ */ lex_default.createElement(Loader, null), /* @__PURE__ */ lex_default.createElement("button", { onClick: startAlert }, "Activar alerta"), /* @__PURE__ */ lex_default.createElement("button", { onClick: stopAlert }, "Desactivar alerta"), /* @__PURE__ */ lex_default.createElement(Alert, null));
   };
   lex_default.mount(/* @__PURE__ */ lex_default.createElement(Layout, null, /* @__PURE__ */ lex_default.createElement(Page, null)));
 })();
